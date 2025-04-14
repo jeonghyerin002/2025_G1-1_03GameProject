@@ -60,6 +60,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecf8b153107904152b059f4a36c29f42, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  instantiateVisual: 1
+  moveSpeedLimit: 50
+  selected: 0
+  selectionOffset: 50
+  cardVisualPrefab: {fileID: 2456882884293643105, guid: 187eb9742368a4109bbfc4c02fb42b48, type: 3}
+  cardVisual: {fileID: 0}
+  isHovering: 0
+  isDragging: 0
+  wasDragged: 0
+  PointerEnterEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  PointerExitEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  PointerUpEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  PointerDownEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  BeginDragEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  EndDragEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  SelectEvent:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &5587284191264926396
 MonoBehaviour:
   m_ObjectHideFlags: 0
