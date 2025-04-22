@@ -31,12 +31,10 @@ public class CardVisual : MonoBehaviour
     [Header("Follow Parameters")]
     [SerializeField] private float followSpeed = 30;
 
-    [Header("Rotation Parameters")]
-    [SerializeField] private float rotationAmount = 20;
-    [SerializeField] private float rotationSpeed = 20;
-    [SerializeField] private float autoTiltAmount = 30;
-    [SerializeField] private float manualTiltAmount = 20;
-    [SerializeField] private float tiltSpeed = 20;
+    
+    
+    
+    
 
     [Header("Scale Parameters")]
     [SerializeField] private bool scaleAnimations = true;

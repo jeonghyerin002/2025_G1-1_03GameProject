@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7006996992505307320}
   - component: {fileID: 8110481357869007721}
   - component: {fileID: 7697484841366769644}
+  - component: {fileID: 8357816135266656491}
   m_Layer: 5
   m_Name: Sprite
   m_TagString: Untagged
@@ -75,6 +76,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8357816135266656491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145312962996155630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0748ce1127a924b50a19848b285944eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2017949772597159594
 GameObject:
   m_ObjectHideFlags: 0
@@ -343,11 +356,6 @@ MonoBehaviour:
   tiltParent: {fileID: 5862976466474931636, guid: bddd0263814164da396aa8d1438dd810, type: 3}
   cardImage: {fileID: 7697484841366769644}
   followSpeed: 15
-  rotationAmount: 60
-  rotationSpeed: 20
-  autoTiltAmount: 15
-  manualTiltAmount: 30
-  tiltSpeed: 40
   scaleAnimations: 0
   scaleOnHover: 1.07
   scaleOnSelect: 1.2
