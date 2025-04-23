@@ -5,22 +5,30 @@ using System.Linq;
 
 public class CardSpriteRandomizer : MonoBehaviour
 {
+    private static List<Sprite> remainingSprites;
+
     void Start()
     {
-        // Load all card sprites from Resources/Cards
-        Sprite[] allSprites = Resources.LoadAll<Sprite>("Cards");
-        if (allSprites.Length == 0)
+        // Load and shuffle only once
+        if (remainingSprites == null || remainingSprites.Count == 0)
         {
-            Debug.LogError("No sprites found in Resources/Cards!");
+            remainingSprites = Resources.LoadAll<Sprite>("Cards").OrderBy(x => Random.value).ToList();
+        }
+
+        if (remainingSprites.Count == 0)
+        {
+            Debug.LogWarning("No more unique sprites left!");
             return;
         }
 
-        // Pick one randomly
-        Sprite randomSprite = allSprites[Random.Range(0, allSprites.Length)];
+        Sprite sprite = remainingSprites[0];
+        remainingSprites.RemoveAt(0);
 
-        // Apply it to this Image component
-        GetComponent<Image>().sprite = randomSprite;
-        gameObject.name = randomSprite.name;
+        GetComponent<Image>().sprite = sprite;
+        gameObject.name = sprite.name;
     }
 }
+
+
+
 

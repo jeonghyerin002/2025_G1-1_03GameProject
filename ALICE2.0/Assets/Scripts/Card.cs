@@ -41,8 +41,16 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     [HideInInspector] public UnityEvent<Card> EndDragEvent;
     [HideInInspector] public UnityEvent<Card, bool> SelectEvent;
 
+    public static int SelectedCount = 0;
+
+
     void Start()
     {
+     
+        
+        SelectedCount = 0;
+        
+
         canvas = GetComponentInParent<Canvas>();
         imageComponent = GetComponent<Image>();
 
@@ -132,20 +140,23 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
+        if (eventData.button != PointerEventData.InputButton.Left) return;
+        if (wasDragged) return;
+
+        bool tryingToSelect = !selected;
+
+        // Limit to 4
+        if (tryingToSelect && SelectedCount >= 4)
+        {
+            Debug.Log("Only 4 cards can be selected!");
             return;
-
-        pointerUpTime = Time.time;
-
-        PointerUpEvent.Invoke(this, pointerUpTime - pointerDownTime > .2f);
-
-        if (pointerUpTime - pointerDownTime > .2f)
-            return;
-
-        if (wasDragged)
-            return;
+        }
 
         selected = !selected;
+
+        if (selected) SelectedCount++;
+        else SelectedCount--;
+
         SelectEvent.Invoke(this, selected);
 
         if (selected)
@@ -154,17 +165,18 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             transform.localPosition = Vector3.zero;
     }
 
+
     public void Deselect()
     {
         if (selected)
         {
             selected = false;
-            if (selected)
-                transform.localPosition += (cardVisual.transform.up * 50);
-            else
-                transform.localPosition = Vector3.zero;
+            SelectedCount = Mathf.Max(0, SelectedCount - 1);
+            SelectEvent.Invoke(this, false);
+            transform.localPosition = Vector3.zero;
         }
     }
+
 
 
     public int SiblingAmount()
