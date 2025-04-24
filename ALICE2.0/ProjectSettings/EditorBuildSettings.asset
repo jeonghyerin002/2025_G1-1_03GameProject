@@ -5,7 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Balatro-Feel.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/ALICE/MainMenu.unity
+    guid: afc2b3622b66b45b7a5988c5f5cb8e14
+  - enabled: 1
+    path: Assets/Scenes/ALICE/3.unity
+    guid: 1aefdcb52dcde4dbc99eafcdc0ee65c1
   m_configObjects: {}
