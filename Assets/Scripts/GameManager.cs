@@ -116,7 +116,7 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < handCount; i++)
         {
-            Vector3 newPos = handArea.position + new Vector3(startX + i * cardSpacing, 0, 0);
+            Vector3 newPos = handArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
             handCards[i].transform.position = newPos;
         }
     }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MargeData : MonoBehaviour
+public class MergeData : MonoBehaviour
 {
     public class SimpleMergeChanceWithSwitch
     {
