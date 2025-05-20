@@ -13,29 +13,68 @@ MonoBehaviour:
   m_Name: MergeChanceSO
   m_EditorClassIdentifier: Assembly-CSharp::CardManager/MergeChanceSO
   cardMergeChances:
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
-  - cardName: 
-    mergeChances: []
+  - cardName: 1
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 2
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 3
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 4
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 5
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 6
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 7
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 8
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 9
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 10
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 11
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 12
+    mergeChances:
+    - 0
+    - 0
+    - 0
+  - cardName: 13
+    mergeChances:
+    - 0
+    - 0
+    - 0
