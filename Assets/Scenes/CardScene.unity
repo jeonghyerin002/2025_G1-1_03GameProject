@@ -950,7 +950,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1151706539}
-  - component: {fileID: 1151706538}
   - component: {fileID: 1151706537}
   m_Layer: 0
   m_Name: GameObject
@@ -1004,21 +1003,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &1151706538
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1151706536}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7df0532b623fa346a31483308446bd6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cardOnArea: {fileID: 0}
-  deletedCardsCount: 0
-  maxDeletions: 5
 --- !u!4 &1151706539
 Transform:
   m_ObjectHideFlags: 0
@@ -1804,6 +1788,7 @@ MonoBehaviour:
   deckCount: 0
   handCards: []
   handCount: 0
+  chance: 0
   prefedinedDeck: 0100000001000000010000000100000002000000020000000200000002000000030000000300000003000000030000000400000004000000040000000400000005000000050000000500000005000000060000000600000006000000060000000700000007000000070000000700000008000000080000000800000008000000090000000900000009000000090000000a0000000a0000000a0000000a0000000b0000000b0000000b0000000b0000000c0000000c0000000c0000000c0000000d0000000d0000000d0000000d000000
   mergeArea: {fileID: 367844435}
   mergeButton: {fileID: 1751138340}

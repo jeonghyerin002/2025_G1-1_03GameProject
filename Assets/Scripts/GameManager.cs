@@ -26,6 +26,8 @@ public class GameManager : MonoBehaviour
     public GameObject[] handCards;
     public int handCount;
 
+    public float chance = 0f;
+
     public int[] prefedinedDeck = new int[]
     {
         1,1,1,1,     // A 카드
@@ -59,7 +61,7 @@ public class GameManager : MonoBehaviour
 
         InitializeDeck();
         ShuffleDeck();
-        
+
         if (drawButton != null)
         {
             drawButton.onClick.AddListener(OnDrawButtonClicked);
@@ -75,7 +77,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        
+
     }
 
     void ShuffleDeck()
@@ -111,7 +113,7 @@ public class GameManager : MonoBehaviour
             newCardObj.SetActive(false);
 
             Card cardComp = newCardObj.GetComponent<Card>();
-            if (cardComp != null )
+            if (cardComp != null)
             {
                 cardComp.InitCard(value, cardImages[imageIndex]);
             }
@@ -164,7 +166,7 @@ public class GameManager : MonoBehaviour
             cardCount.gameObject.SetActive(true);
             Invoke("cardCountTime", 0.5f);
             return;
-            
+
         }
         else
         {
@@ -178,7 +180,7 @@ public class GameManager : MonoBehaviour
         }
         GameObject drawnCard = deckCards[0];
 
-        for(int i = 0; i <deckCount - 1; i++)
+        for (int i = 0; i < deckCount - 1; i++)
         {
             deckCards[i] = deckCards[i + 1];
         }
@@ -207,7 +209,7 @@ public class GameManager : MonoBehaviour
 
     void MergeCards()
     {
-        if (mergeCount != 2 && mergeCount != 3 && mergeCount !=4)
+        if (mergeCount != 2 && mergeCount != 3 && mergeCount != 4)
         {
             Debug.Log("머지를 하려면 카드가 2개 또는 3개 혹은 4개 필요합니다.");
             return;
@@ -225,7 +227,7 @@ public class GameManager : MonoBehaviour
         }
 
         int newValue = firstCard + 1;
-                                      // 스코어 적기.
+        // 스코어 적기.
 
         if (newValue > cardImages.Length)
         {
@@ -266,6 +268,103 @@ public class GameManager : MonoBehaviour
         ArrangeHand();
     }
 
+    void LuckyChance()
+    {
+
+        int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
+
+        switch (firstCard)
+        {
+            case 1:
+                if (mergeCount == 2) chance = 1.0f;
+                else if (mergeCount == 3) chance = 0.97f;
+                else if (mergeCount == 4) chance = 0.95f;
+                break;
+
+            case 2:
+                if (mergeCount == 2) chance = 0.92f;
+                else if (mergeCount == 3) chance = 0.90f;
+                else if (mergeCount == 4) chance = 0.87f;
+                break;
+
+            case 3:
+                if (mergeCount == 2) chance = 85f;
+                else if (mergeCount == 3) chance = 0.82f;
+                else if (mergeCount == 4) chance = 0.80f;
+                break;
+
+            case 4:
+                if (mergeCount == 2) chance = 0.75f;
+                else if (mergeCount == 3) chance = 0.72f;
+                else if (mergeCount == 4) chance = 0.70f;
+                break;
+
+            case 5:
+                if (mergeCount == 2) chance = 0.5f;
+                else if (mergeCount == 3) chance = 0.45f;
+                else if (mergeCount == 4) chance = 0.44f;
+                break;
+
+            case 6:
+                if (mergeCount == 2) chance = 0.42f;
+                else if (mergeCount == 3) chance = 0.40f;
+                else if (mergeCount == 4) chance = 0.39f;
+                break;
+
+            case 7:
+                if (mergeCount == 2) chance = 1.0f;
+                else if (mergeCount == 3) chance = 0.8f;
+                else if (mergeCount == 4) chance = 0.74f;
+                break;
+
+            case 8:
+                if (mergeCount == 2) chance = 0.4f;
+                else if (mergeCount == 3) chance = 0.38f;
+                else if (mergeCount == 4) chance = 0.35f;
+                break;
+
+            case 9:
+                if (mergeCount == 2) chance = 0.25f;
+                else if (mergeCount == 3) chance = 0.23f;
+                else if (mergeCount == 4) chance = 0.2f;
+                break;
+
+            case 10:
+                if (mergeCount == 2) chance = 0.19f;
+                else if (mergeCount == 3) chance = 0.19f;
+                else if (mergeCount == 4) chance = 0.17f;
+                break;
+
+            case 11:
+                if (mergeCount == 2) chance = 0.1f;
+                else if (mergeCount == 3) chance = 0.08f;
+                else if (mergeCount == 4) chance = 0.05f;
+                break;
+
+            case 12:
+                if (mergeCount == 2) chance = 0.1f;
+                else if (mergeCount == 3) chance = 0.08f;
+                else if (mergeCount == 4) chance = 0.05f;
+                break;
+
+            case 13:
+                if (mergeCount == 2) chance = 0.1f;
+                else if (mergeCount == 3) chance = 0.08f;
+                else if (mergeCount == 4) chance = 0.05f;
+                break;
+
+            default:
+                Debug.LogWarning($"카드 타입 {firstCard}는 정의되지 않았습니다.");
+                break;
+
+
+                
+
+        }
+    }
+
+
+
     public void MoveCardToMerge(GameObject card)
     {
         if (mergeCount >= maxMergeSize)
@@ -273,7 +372,7 @@ public class GameManager : MonoBehaviour
             Debug.Log("머지 영역이 가득 찼습니다.!");
             return;
         }
-        for (int i = 0; i < handCount; i++) 
+        for (int i = 0; i < handCount; i++)
         {
             if (handCards[i] == card)
             {
@@ -301,112 +400,29 @@ public class GameManager : MonoBehaviour
 
     void OnMergeButtonClicked()
     {
-        SimpleMergeChanceWithSwitch Lucky = new SimpleMergeChanceWithSwitch();
+        float GoodChance = Random.value;
 
-        if (Random.value > Lucky.chance)
+        LuckyChance();
+      
+       
+        Debug.Log(chance);
+        Debug.Log("굿굿굿굿굿" + GoodChance) ;
+
+        if (GoodChance <= chance)
         {
+            
             MergeCards();
+            Debug.Log("성공 했습니다!!!!!!!!!!!!!!!");
+
         }
-    }
-
-
-
-
-}
-public class SimpleMergeChanceWithSwitch
-{
-    public float chance = 0f;
-    public bool TryMerge(string cardType, int count)
-    {
-        
-
-
-        switch (cardType)
+        else
         {
-            case "Card1":
-                if (count == 2) chance = 1.0f;
-                else if (count == 3) chance = 0.97f;
-                else if (count == 4) chance = 0.95f;
-                break;
-
-            case "Card2":
-                if (count == 2) chance = 0.92f;
-                else if (count == 3) chance = 0.90f;
-                else if (count == 4) chance = 0.87f;
-                break;
-
-            case "Card3":
-                if (count == 2) chance = 85f;
-                else if (count == 3) chance = 0.82f;
-                else if (count == 4) chance = 0.80f;
-                break;
-
-            case "Card4":
-                if (count == 2) chance = 0.75f;
-                else if (count == 3) chance = 0.72f;
-                else if (count == 4) chance = 0.70f;
-                break;
-
-            case "Card5":
-                if (count == 2) chance = 0.5f;
-                else if (count == 3) chance = 0.45f;
-                else if (count == 4) chance = 0.44f;
-                break;
-
-            case "Card6":
-                if (count == 2) chance = 0.42f;
-                else if (count == 3) chance = 0.40f;
-                else if (count == 4) chance = 0.39f;
-                break;
-
-            case "Card7":
-                if (count == 2) chance = 1.0f;
-                else if (count == 3) chance = 0.8f;
-                else if (count == 4) chance = 0.74f;
-                break;
-
-            case "Card8":
-                if (count == 2) chance = 0.4f;
-                else if (count == 3) chance = 0.38f;
-                else if (count == 4) chance = 0.35f;
-                break;
-
-            case "Card9":
-                if (count == 2) chance = 0.25f;
-                else if (count == 3) chance = 0.23f;
-                else if (count == 4) chance = 0.2f;
-                break;
-
-            case "Card10":
-                if (count == 2) chance = 0.19f;
-                else if (count == 3) chance = 0.19f;
-                else if (count == 4) chance = 0.17f;
-                break;
-
-            case "Card11":
-                if (count == 2) chance = 0.1f;
-                else if (count == 3) chance = 0.08f;
-                else if (count == 4) chance = 0.05f;
-                break;
-
-            case "Card12":
-                if (count == 2) chance = 0.1f;
-                else if (count == 3) chance = 0.08f;
-                else if (count == 4) chance = 0.05f;
-                break;
-
-            case "Card13":
-                if (count == 2) chance = 0.1f;
-                else if (count == 3) chance = 0.08f;
-                else if (count == 4) chance = 0.05f;
-                break;
-
-            default:
-                Debug.LogWarning($"카드 타입 {cardType}는 정의되지 않았습니다.");
-                break;
+            Debug.Log("실패했습니다!!!!!!!!!!!!");
         }
-
-        return UnityEngine.Random.value < chance;
-
     }
 }
+
+
+
+
+
