@@ -50,6 +50,8 @@ public class GameManager : MonoBehaviour
     public Button mergeButton;
     public int maxMergeSize = 4;
 
+    public Button DeleteButton;
+
     public GameObject[] mergeCards;
     public int mergeCount;
 
@@ -71,6 +73,11 @@ public class GameManager : MonoBehaviour
         {
             mergeButton.onClick.AddListener(OnMergeButtonClicked);
             mergeButton.interactable = false;
+        }
+
+        if(DeleteButton != null)
+        {
+            DeleteButton.onClick.AddListener(DeleteMergeCards);  
         }
 
     }
@@ -205,6 +212,41 @@ public class GameManager : MonoBehaviour
         {
             mergeButton.interactable = (mergeCount == 2 || mergeCount == 3);
         }
+    }
+
+    public void DeleteMergeCards()
+    {
+
+        if (mergeCount == 0)
+        {
+            Debug.Log("삭제할 카드가 없습니다.");
+            return;
+        }
+
+        if (mergeCount > 3)
+        {
+            Debug.Log("한 번에 삭제할 수 있는 최대 카드는 3장입니다.");
+            return;
+        }
+
+        for (int i = 0; i < mergeCount; i++)
+        {
+            if (mergeCards[i] != null)
+            {
+                Destroy(mergeCards[i]);
+            }
+        }
+
+        for (int i = 0; i < maxMergeSize; i++)
+        {
+            mergeCards[i] = null;
+        }
+
+        mergeCount = 0;
+        UpdateMergeButtonState();
+        ArrangeMerge();
+
+        Debug.Log("Merge 영역의 카드들이 삭제되었습니다.");
     }
 
     void MergeCards()
@@ -418,8 +460,12 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("실패했습니다!!!!!!!!!!!!");
+            DeleteMergeCards();
         }
     }
+
+   
+
 }
 
 
