@@ -217,7 +217,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void DeleteMergeCards()
+    void DeleteMergeCards()
     {
 
         if (mergeCount == 0)
@@ -443,7 +443,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    void OnMergeButtonClicked()
+    public void OnMergeButtonClicked()
     {
         float GoodChance = Random.value;
 

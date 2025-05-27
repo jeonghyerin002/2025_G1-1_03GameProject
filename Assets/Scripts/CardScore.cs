@@ -4,13 +4,23 @@ using UnityEngine;
 
 public class CardScore : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
+    [SerializeField] GameManager data;
+
+    public float mergeSucces = 10;
+    public float playerScore = 0;
+    public bool mergeTry;
+
+    //void MergeTry()
+    //{
+        //data.OnMergeButtonClicked();
+
+        //if (mergeTry == true)
+        //{
+            //playerScore += mergeSucces;
+        //}
+    //}
+
     void Update()
     {
         
