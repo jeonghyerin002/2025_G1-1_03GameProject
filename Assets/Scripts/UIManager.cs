@@ -1,14 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
+    public static UIManager Instance;
+
     public GameObject HelpPanel;
+    public TextMeshProUGUI scoreText;
+    int score = 0;
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject); // 중복 방지
+    }
+
+
+    public void AddScore(int amount)
+    {
+        score += amount;
+        scoreText.text = "Score: " + score;
+    }
 
     // Start is called before the first frame update
-  public void GameStartButtonAction()
+    public void GameStartButtonAction()
     {
         SceneManager.LoadScene("CardScene");
 

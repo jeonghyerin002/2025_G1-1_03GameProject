@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
     public Button drawButton;
     public TextMeshProUGUI deckCountText;
     public TextMeshProUGUI cardCount;
+    public TextMeshProUGUI scoreText;
+    public UIManager uiManager;
 
     public float cardSpacing = 2.0f;
     public int maxHandSize = 6;
@@ -66,6 +68,15 @@ public class GameManager : MonoBehaviour
 
         InitializeDeck();
         ShuffleDeck();
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.AddScore(1);
+        }
+        else
+        {
+            Debug.LogError("UIManager.Instance가 null입니다!");
+        }
 
         if (drawButton != null)
         {
@@ -272,6 +283,18 @@ public class GameManager : MonoBehaviour
         }
 
         int newValue = firstCard + 1;
+
+        int scoreToAdd = newValue * 1;
+        score += scoreToAdd;
+        Debug.Log($"머지 성공! 점수 +{scoreToAdd} (현재 점수: {score})");
+
+
+        // 최대값 체크
+        if (newValue > cardImages.Length)
+        {
+            Debug.Log("최대 카드 값에 도달 했습니다.");
+            return;
+        }
         // 스코어 적기.
 
         if (newValue > cardImages.Length)
@@ -302,6 +325,8 @@ public class GameManager : MonoBehaviour
             mergeCards[i] = null;
         }
 
+
+
         mergeCount = 0;
 
         UpdateMergeButtonState();
@@ -310,7 +335,10 @@ public class GameManager : MonoBehaviour
         handCount++;
         newCard.transform.SetParent(handArea);
 
+        UIManager.Instance.AddScore(newValue * 1);
+
         ArrangeHand();
+        scoreText.text = "Score: " + score.ToString();
     }
 
     void LuckyChance()
