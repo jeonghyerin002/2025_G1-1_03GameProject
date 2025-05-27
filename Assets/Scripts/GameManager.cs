@@ -28,6 +28,9 @@ public class GameManager : MonoBehaviour
 
     public float chance = 0f;
 
+    public int stage;
+    public int score;
+
     public int[] prefedinedDeck = new int[]
     {
         1,1,1,1,     // A Ä«µå

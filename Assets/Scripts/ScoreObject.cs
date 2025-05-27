@@ -6,7 +6,7 @@ public class ScoreObject : MonoBehaviour             //게임엔진입문 11강 5p
 {
     [SerializeField] ScoreSO data;
 
-    public int Getpoint()
+    public int GetScore()
     {
         return data.score;
     }
