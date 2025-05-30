@@ -60,6 +60,10 @@ public class GameManager : MonoBehaviour
     public GameObject[] mergeCards;
     public int mergeCount;
 
+    public int gameRound;
+
+    public RoundSO[] roundSOs;
+
     void Start()
     {
         deckCards = new GameObject[prefedinedDeck.Length];
@@ -71,7 +75,7 @@ public class GameManager : MonoBehaviour
 
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.AddScore(1);
+            UIManager.Instance.ShowScore(1);
         }
         else
         {
@@ -335,10 +339,20 @@ public class GameManager : MonoBehaviour
         handCount++;
         newCard.transform.SetParent(handArea);
 
-        UIManager.Instance.AddScore(newValue * 1);
+        UIManager.Instance.ShowScore(score);
 
         ArrangeHand();
-        scoreText.text = "Score: " + score.ToString();
+        CheckScore();
+    }
+
+    public void CheckScore()
+    {
+        
+        if(score >= roundSOs[gameRound - 1].score)
+        {
+            Debug.Log("½Â¸®");
+        }
+
     }
 
     void LuckyChance()

@@ -21,11 +21,13 @@ public class UIManager : MonoBehaviour
     }
 
 
-    public void AddScore(int amount)
+    public void ShowScore(int amount)
     {
-        score += amount;
-        scoreText.text = "Score: " + score;
+       
+        scoreText.text = "Score: " + amount;
     }
+
+  
 
     // Start is called before the first frame update
     public void GameStartButtonAction()
