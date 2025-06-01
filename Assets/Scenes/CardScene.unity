@@ -2115,6 +2115,12 @@ MonoBehaviour:
   DeleteButton: {fileID: 1129049295}
   mergeCards: []
   mergeCount: 0
+  gameRound: 2
+  roundSOs:
+  - {fileID: 11400000, guid: f7cf56a501c401f4aaaaad0ed55d5c67, type: 2}
+  - {fileID: 11400000, guid: f2da6e843f9472f42bc1265d32c6eb57, type: 2}
+  - {fileID: 11400000, guid: c2af6e38752d3594f969698f0e89dfd0, type: 2}
+  - {fileID: 11400000, guid: 5277caeeadaa4ba4f82c59ef6dfb28e3, type: 2}
 --- !u!4 &1873551045
 Transform:
   m_ObjectHideFlags: 0
