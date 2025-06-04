@@ -4,6 +4,7 @@ using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
@@ -17,6 +18,9 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI deckCountText;
     public TextMeshProUGUI cardCount;
     public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI notmerge;
+    public TextMeshProUGUI maxcard;
+
     public UIManager uiManager;
 
     public float cardSpacing = 2.0f;
@@ -75,7 +79,7 @@ public class GameManager : MonoBehaviour
 
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.ShowScore(1);
+            UIManager.Instance.ShowScore(0);
         }
         else
         {
@@ -203,7 +207,9 @@ public class GameManager : MonoBehaviour
             cardCount.gameObject.SetActive(true);
             return;
         }
-        GameObject drawnCard = deckCards[0];
+        
+        
+            GameObject drawnCard = deckCards[0];
 
         for (int i = 0; i < deckCount - 1; i++)
         {
@@ -216,6 +222,9 @@ public class GameManager : MonoBehaviour
         handCount++;
 
         drawnCard.transform.SetParent(handArea);
+        //handCards[handCount].transform.DOScale(new Vector3(1.2f, 1.2f, 1.2f), 1.5f);
+
+
 
         ArrangeHand();
     }
@@ -435,9 +444,9 @@ public class GameManager : MonoBehaviour
                 break;
 
             case 13:
-                if (mergeCount == 2) chance = 0.1f;
-                else if (mergeCount == 3) chance = 0.08f;
-                else if (mergeCount == 4) chance = 0.05f;
+                if (mergeCount == 2) chance = 0f;
+                else if (mergeCount == 3) chance = 0f;
+                else if (mergeCount == 4) chance = 0f;
                 break;
 
             default:
@@ -487,7 +496,33 @@ public class GameManager : MonoBehaviour
 
     public void OnMergeButtonClicked()
     {
-        float GoodChance = Random.value;
+        // 카드 값이 같은지 먼저 확인
+        int value = mergeCards[0].GetComponent<Card>().cardValue;
+        for (int i = 1; i < mergeCount; i++)
+        {
+            if (mergeCards[i].GetComponent<Card>().cardValue != value)
+            {
+                Debug.Log("같은 숫자의 카드만 머지 할 수 있습니다.");
+                return;
+            }
+        }
+
+        if (mergeCount == 0 || mergeCards[0] == null)
+            return;
+
+        int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
+
+        if (firstCard == 13)
+        {
+            maxcard.text = "더 이상 합성 할 수 없습니다.";
+            maxcard.gameObject.SetActive(true);
+            Invoke("dontmerge", 0.5f);
+            Debug.Log("13번 카드이므로 합성 불가");
+            return;
+        }
+      
+
+            float GoodChance = Random.value;
 
         LuckyChance();
       
@@ -509,7 +544,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-   
+    void dontmerge()
+    {
+        maxcard.gameObject.SetActive(false);
+    }
+
+
+
 
 }
 

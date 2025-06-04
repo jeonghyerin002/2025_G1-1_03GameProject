@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using static MergeChanceSO;
-using Unity.VisualScripting;
+using DG.Tweening;
 
 public class Card : MonoBehaviour
 {
@@ -11,6 +11,12 @@ public class Card : MonoBehaviour
     public Sprite cardImage;
     public TextMeshPro cardText;
     public MergeChanceSO mergeData;
+
+    public void OnEnable()
+    {
+        gameObject.transform.DOPunchScale(new Vector3(0.05f, 0.05f, 0.05f), 0.5f);
+        gameObject.transform.DOPunchRotation(new Vector3(1.05f, 0.05f, 0.05f), 0.5f);
+    }
 
     public void MergeData() //카드 데이터를 가져옴
     {
