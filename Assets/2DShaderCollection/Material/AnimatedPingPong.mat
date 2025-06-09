@@ -62,7 +62,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - AnimatedPingPongOffsetUV_1_OffsetX_1: 0
+    - AnimatedPingPongOffsetUV_1_OffsetX_1: 0.07
     - AnimatedPingPongOffsetUV_1_OffsetY_1: 0.1
     - AnimatedPingPongOffsetUV_1_Speed_1: 0.481
     - AnimatedPingPongOffsetUV_1_ZoomX_1: 1
