@@ -102,6 +102,14 @@ MonoBehaviour:
   cardValue: 0
   cardImage: {fileID: 0}
   cardText: {fileID: 0}
+  mergeData: {fileID: 0}
+  originalMaterial: {fileID: 0}
+  burnMaterial: {fileID: 2100000, guid: 4a595699ecd1dce459ee81644994ed84, type: 2}
+  disolveMaterial: {fileID: 2100000, guid: 65206cb3ecd08a647878d97388c2b146, type: 2}
+  explosionMaterial: {fileID: 2100000, guid: 7d3406740d97cf1468126e2393d1748f, type: 2}
+  shinyMaterial: {fileID: 2100000, guid: b880f30ce2850034680b5e2b91cbde82, type: 2}
+  fireMaterial: {fileID: 2100000, guid: 03fa9a215b6311c41afad2530c47a7e6, type: 2}
+  pixelMaterial: {fileID: 2100000, guid: f2ecbaf3928e5d84498c0b5ade40ce6e, type: 2}
 --- !u!61 &6362538753863541440
 BoxCollider2D:
   m_ObjectHideFlags: 0
