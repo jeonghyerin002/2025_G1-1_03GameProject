@@ -56,7 +56,7 @@ public class GameManager : MonoBehaviour
         10,10,10,10,
         11,11,11,11,    //J 카드
         12,12,12,12,    //Q 카드
-        13,13,13,13     //K 카드 모든 카드가 각각 4장
+        13,13,13,13     //K 카드 모든 카드가 각각 4개
     };
 
     public Transform mergeArea;
@@ -72,13 +72,31 @@ public class GameManager : MonoBehaviour
 
     public RoundSO[] roundSOs;
 
-    // 연출 상태 관리
+    // 연출 상태 관리 - 더 세분화
     private bool isPlayingEffect = false;
+    private bool isMergeEffectPlaying = false;
+    private bool isDeleteEffectPlaying = false;
 
-    // DragDrop에서 호출할 수 있도록 public 함수 추가
+    // 드래그 제어를 위한 공개 함수들
     public bool IsPlayingEffect()
     {
         return isPlayingEffect;
+    }
+
+    public bool IsMergeEffectPlaying()
+    {
+        return isMergeEffectPlaying;
+    }
+
+    public bool IsDeleteEffectPlaying()
+    {
+        return isDeleteEffectPlaying;
+    }
+
+    // 모든 상호작용이 가능한지 확인
+    public bool CanInteract()
+    {
+        return !isPlayingEffect && !isMergeEffectPlaying && !isDeleteEffectPlaying;
     }
 
     void Start()
@@ -112,41 +130,54 @@ public class GameManager : MonoBehaviour
 
         if (DeleteButton != null)
         {
-            DeleteButton.onClick.AddListener(() => {
-                Debug.Log($"삭제 버튼 클릭! 현재 mergeCount: {mergeCount}");
-
-                if (mergeCount > 0)
-                {
-                    Debug.Log("삭제 연출 시작!");
-                    StartCoroutine(ShowDeleteEffect());
-                    // DelayedDeleteMergeCards() 제거! ShowDeleteEffect에서 자체적으로 처리
-                }
-                else
-                {
-                    Debug.Log("삭제할 카드가 없습니다. 머지 영역에 카드를 먼저 놓아주세요!");
-
-                    // 삭제할 카드가 없을 때도 약간의 피드백 제공
-                    if (mergeResultText != null)
-                    {
-                        mergeResultText.text = "삭제할 카드가 없어요!";
-                        mergeResultText.color = Color.yellow;
-                        mergeResultText.gameObject.SetActive(true);
-
-                        mergeResultText.transform.DOShakePosition(0.5f, strength: 10f, vibrato: 10);
-
-                        mergeResultText.DOFade(0f, 1f).SetDelay(0.5f).OnComplete(() => {
-                            mergeResultText.gameObject.SetActive(false);
-                            mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
-                        });
-                    }
-                }
-            });
+            DeleteButton.onClick.AddListener(OnDeleteButtonClicked);
         }
 
         // 머지 결과 텍스트 초기화
         if (mergeResultText != null)
         {
             mergeResultText.gameObject.SetActive(false);
+        }
+    }
+
+    // 삭제 버튼 클릭 핸들러 분리
+    void OnDeleteButtonClicked()
+    {
+        Debug.Log($"삭제 버튼 클릭! 현재 mergeCount: {mergeCount}, CanInteract: {CanInteract()}");
+
+        // 상호작용 불가능한 상태면 무시
+        if (!CanInteract())
+        {
+            Debug.Log("연출 중이므로 삭제 버튼 무시됨");
+            return;
+        }
+
+        if (mergeCount > 0)
+        {
+            Debug.Log("삭제 연출 시작!");
+            StartCoroutine(ShowDeleteEffect());
+        }
+        else
+        {
+            Debug.Log("삭제할 카드가 없습니다. 머지 영역에 카드를 먼저 넣어주세요!");
+            ShowWarningMessage("삭제할 카드가 없어요!", Color.yellow);
+        }
+    }
+
+    // 경고 메시지 표시 (공통 함수)
+    void ShowWarningMessage(string message, Color color)
+    {
+        if (mergeResultText != null)
+        {
+            mergeResultText.text = message;
+            mergeResultText.color = color;
+            mergeResultText.gameObject.SetActive(true);
+
+            mergeResultText.transform.DOShakePosition(0.5f, strength: 10f, vibrato: 10);
+            mergeResultText.DOFade(0f, 1f).SetDelay(0.5f).OnComplete(() => {
+                mergeResultText.gameObject.SetActive(false);
+                mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
+            });
         }
     }
 
@@ -157,8 +188,6 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < mergeCount; i++)
         {
-            Debug.Log($"성공 카드 {i} 확인 중...");
-
             if (mergeCards[i] != null)
             {
                 Card cardComponent = mergeCards[i].GetComponent<Card>();
@@ -170,8 +199,7 @@ public class GameManager : MonoBehaviour
                 else
                 {
                     Debug.LogError($"성공 카드 {i}에 Card 컴포넌트가 없습니다!");
-
-                    // Card 컴포넌트가 없어도 기본 효과라도 보여주기
+                    // 기본 효과라도 보여주기
                     SpriteRenderer sr = mergeCards[i].GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {
@@ -179,10 +207,6 @@ public class GameManager : MonoBehaviour
                         mergeCards[i].transform.DORotate(new Vector3(0, 0, 360), 1f, RotateMode.FastBeyond360);
                     }
                 }
-            }
-            else
-            {
-                Debug.LogError($"mergeCards[{i}]가 null입니다!");
             }
         }
     }
@@ -206,9 +230,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 머지 성공 연출 (쉐이더 효과 제거, 기본 UI만)
+    // 머지 성공 연출
     IEnumerator ShowMergeSuccess(int newCardValue, int scoreGained)
     {
+        isMergeEffectPlaying = true;
+
         // 성공 텍스트 표시
         if (mergeResultText != null)
         {
@@ -240,11 +266,15 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(2f);
             mergeSuccessEffect.SetActive(false);
         }
+
+        isMergeEffectPlaying = false;
     }
 
-    // 머지 실패 연출 (쉐이더 효과 제거, 기본 UI만)
+    // 머지 실패 연출
     IEnumerator ShowMergeFailure()
     {
+        isMergeEffectPlaying = true;
+
         // 실패 텍스트 표시
         if (mergeResultText != null)
         {
@@ -271,11 +301,16 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(2f);
             mergeFailEffect.SetActive(false);
         }
+
+        isMergeEffectPlaying = false;
     }
 
     // 삭제 연출
     IEnumerator ShowDeleteEffect()
     {
+        isDeleteEffectPlaying = true;
+        SetButtonsInteractable(false);
+
         // 삭제 텍스트 표시
         if (mergeResultText != null)
         {
@@ -296,95 +331,78 @@ public class GameManager : MonoBehaviour
             });
         }
 
-        // 카드들에 삭제 쉐이더 효과 적용 (mergeCount가 0이 되기 전에!)
+        // 카드들에 삭제 쉐이더 효과 적용
         Debug.Log($"삭제 효과 적용 시작! mergeCount: {mergeCount}");
 
         for (int i = 0; i < mergeCount; i++)
         {
             if (mergeCards[i] != null)
             {
-                Debug.Log($"카드 {i} 확인 중...");
-
                 Card cardComponent = mergeCards[i].GetComponent<Card>();
                 if (cardComponent != null)
                 {
-                    Debug.Log($"카드 {i}에 Card 컴포넌트 발견! 삭제 효과 적용 중...");
-
                     // 각 카드마다 약간의 딜레이
                     float delay = i * 0.1f;
                     StartCoroutine(DelayedDeleteEffect(cardComponent, delay));
                 }
-                else
-                {
-                    Debug.LogError($"카드 {i}에 Card 컴포넌트가 없습니다!");
-                }
-            }
-            else
-            {
-                Debug.LogError($"mergeCards[{i}]가 null입니다!");
             }
         }
 
         // 모든 애니메이션이 끝날 때까지 대기
-        yield return new WaitForSeconds(0.5f + (mergeCount * 0.1f) + 1f); // 여유시간 추가
+        yield return new WaitForSeconds(0.5f + (mergeCount * 0.1f) + 1.5f);
 
-        // 이제 실제로 카드들을 삭제
-        Debug.Log("ShowDeleteEffect에서 카드 삭제 (DelayedDeleteMergeCards에서도 처리됨)");
-        // DeleteMergeCards(); 제거 - DelayedDeleteMergeCards에서 처리
+        // 실제로 카드들을 삭제
+        DeleteMergeCards();
 
-        // 버튼 복원은 DelayedDeleteMergeCards에서 처리
-        // RestoreButtonsAfterEffect(); 제거
+        isDeleteEffectPlaying = false;
+        RestoreButtonsAfterEffect();
     }
 
     // 지연된 삭제 효과
     IEnumerator DelayedDeleteEffect(Card card, float delay)
     {
-        Debug.Log($"DelayedDeleteEffect 시작! delay: {delay}");
         yield return new WaitForSeconds(delay);
 
         if (card != null)
         {
-            Debug.Log($"Card.PlayDeleteEffect() 호출!");
             card.PlayDeleteEffect();
-        }
-        else
-        {
-            Debug.LogError("Card가 null입니다!");
         }
     }
 
     public void OnMergeButtonClicked()
     {
-        Debug.Log($"머지 버튼 클릭됨! isPlayingEffect: {isPlayingEffect}");
+        Debug.Log($"머지 버튼 클릭됨! CanInteract: {CanInteract()}");
 
-        // 연출 중이면 무시
-        if (isPlayingEffect)
+        // 상호작용 불가능한 상태면 무시
+        if (!CanInteract())
         {
             Debug.Log("연출 중이므로 머지 버튼 무시됨");
             return;
         }
 
         // 카드 값이 같은지 먼저 확인
+        if (mergeCount < 2)
+        {
+            Debug.Log("머지하려면 최소 2장의 카드가 필요합니다.");
+            return;
+        }
+
         int value = mergeCards[0].GetComponent<Card>().cardValue;
         for (int i = 1; i < mergeCount; i++)
         {
             if (mergeCards[i].GetComponent<Card>().cardValue != value)
             {
                 Debug.Log("같은 숫자의 카드만 머지 할 수 있습니다.");
+                ShowWarningMessage("같은 숫자의 카드만 머지 가능!", Color.yellow);
                 return;
             }
         }
-
-        if (mergeCount == 0 || mergeCards[0] == null)
-            return;
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
 
         if (firstCard == 13)
         {
-            maxcard.text = "더 이상 합성 할 수 없습니다.";
-            maxcard.gameObject.SetActive(true);
-            Invoke("dontmerge", 0.5f);
+            ShowWarningMessage("더 이상 합성 할 수 없습니다.", Color.red);
             Debug.Log("13번 카드이므로 합성 불가");
             return;
         }
@@ -397,8 +415,7 @@ public class GameManager : MonoBehaviour
         float GoodChance = Random.value;
         LuckyChance();
 
-        Debug.Log(chance);
-        Debug.Log("랜덤값: " + GoodChance);
+        Debug.Log($"확률: {chance}, 랜덤값: {GoodChance}");
 
         if (GoodChance <= chance)
         {
@@ -411,7 +428,7 @@ public class GameManager : MonoBehaviour
 
             StartCoroutine(ShowMergeSuccess(newValue, scoreToAdd));
 
-            // 잠시 후 실제 머지 처리 (원래대로)
+            // 잠시 후 실제 머지 처리 (순차적으로)
             StartCoroutine(DelayedMergeCards());
 
             Debug.Log("성공 했습니다!!!!!!!!!!!!!!");
@@ -419,43 +436,50 @@ public class GameManager : MonoBehaviour
         else
         {
             // 실패!
-
             // 쉐이더 효과 먼저 적용
             ApplyMergeFailureEffects();
 
             Debug.Log("실패했습니다!!!!!!!!!!!!");
             StartCoroutine(ShowMergeFailure());
 
-            // 잠시 후 카드 삭제 (원래대로)
+            // 잠시 후 카드 삭제 (순차적으로)
             StartCoroutine(DelayedDeleteMergeCards());
         }
     }
 
-    // 지연된 머지 처리 (연출 후) - 원래대로 복원
+    // 지연된 머지 처리 (연출 후) - 순차적으로 복구
     IEnumerator DelayedMergeCards()
     {
         Debug.Log("DelayedMergeCards 시작");
-        yield return new WaitForSeconds(0.5f); // 연출 시간 대기
+
+        // 머지 효과 완료까지 대기
+        yield return new WaitUntil(() => !isMergeEffectPlaying);
+
+        yield return new WaitForSeconds(0.5f); // 추가 여유시간
 
         Debug.Log("실제 MergeCards 호출");
         MergeCards();
 
-        // 연출 종료 후 버튼 복원
-        Debug.Log("머지 완료 - 버튼 복원");
+        // 연출 종료 후 버튼 복구
+        Debug.Log("머지 완료 - 버튼 복구");
         RestoreButtonsAfterEffect();
     }
 
-    // 지연된 카드 삭제 (연출 후) - 원래대로 복원  
+    // 지연된 카드 삭제 (연출 후) - 순차적으로 복구  
     IEnumerator DelayedDeleteMergeCards()
     {
         Debug.Log("DelayedDeleteMergeCards 시작");
+
+        // 머지 효과 완료까지 대기
+        yield return new WaitUntil(() => !isMergeEffectPlaying);
+
         yield return new WaitForSeconds(1.2f); // 연출 시간 대기
 
         Debug.Log("실제 DeleteMergeCards 호출");
         DeleteMergeCards();
 
-        // 연출 종료 후 버튼 복원
-        Debug.Log("삭제 완료 - 버튼 복원");
+        // 연출 종료 후 버튼 복구
+        Debug.Log("삭제 완료 - 버튼 복구");
         RestoreButtonsAfterEffect();
     }
 
@@ -465,8 +489,16 @@ public class GameManager : MonoBehaviour
         if (drawButton != null)
             drawButton.interactable = interactable;
 
-        if (mergeButton != null)
-            mergeButton.interactable = interactable;
+        if (mergeButton != null && interactable)
+        {
+            // 활성화시에는 조건에 따라 결정
+            UpdateMergeButtonState();
+        }
+        else if (mergeButton != null)
+        {
+            // 비활성화시에는 무조건 false
+            mergeButton.interactable = false;
+        }
 
         if (DeleteButton != null)
             DeleteButton.interactable = interactable;
@@ -474,7 +506,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"버튼들 상태 변경: {(interactable ? "활성화" : "비활성화")}");
     }
 
-    // 연출 종료 후 버튼 복원
+    // 연출 종료 후 버튼 복구
     void RestoreButtonsAfterEffect()
     {
         isPlayingEffect = false;
@@ -489,7 +521,7 @@ public class GameManager : MonoBehaviour
         if (DeleteButton != null)
             DeleteButton.interactable = true;
 
-        Debug.Log("연출 종료 - 버튼들 복원됨");
+        Debug.Log("연출 종료 - 버튼들 복구됨");
     }
 
     void ShuffleDeck()
@@ -559,10 +591,10 @@ public class GameManager : MonoBehaviour
 
     public void OnDrawButtonClicked()
     {
-        Debug.Log($"뽑기 버튼 클릭됨! isPlayingEffect: {isPlayingEffect}");
+        Debug.Log($"뽑기 버튼 클릭됨! CanInteract: {CanInteract()}");
 
-        // 연출 중이면 무시
-        if (isPlayingEffect)
+        // 상호작용 불가능한 상태면 무시
+        if (!CanInteract())
         {
             Debug.Log("연출 중이므로 뽑기 버튼 무시됨");
             return;
@@ -576,19 +608,13 @@ public class GameManager : MonoBehaviour
     {
         if (handCount + mergeCount >= maxHandSize)
         {
-            cardCount.text = "손에 카드가 가득 찼어!";
-            cardCount.gameObject.SetActive(true);
-            Invoke("cardCountTime", 0.5f);
+            ShowWarningMessage("손에 카드가 가득 참!", Color.yellow);
             return;
         }
-        else
-        {
-            cardCount.gameObject.SetActive(false);
-        }
+
         if (deckCount <= 0)
         {
-            cardCount.text = "덱 이상 카드를 뽑을 수 없을 거 같아";
-            cardCount.gameObject.SetActive(true);
+            ShowWarningMessage("덱 이상 카드를 뽑을 수 없을 거 같아", Color.red);
             return;
         }
 
@@ -609,16 +635,13 @@ public class GameManager : MonoBehaviour
         ArrangeHand();
     }
 
-    void cardCountTime()
-    {
-        cardCount.gameObject.SetActive(false);
-    }
-
     void UpdateMergeButtonState()
     {
         if (mergeButton != null)
         {
-            mergeButton.interactable = (mergeCount == 2 || mergeCount == 3);
+            // 연출 중이 아니고, 카드가 2~3장 있을 때만 활성화
+            bool canMerge = CanInteract() && (mergeCount == 2 || mergeCount == 3);
+            mergeButton.interactable = canMerge;
         }
     }
 
@@ -629,12 +652,6 @@ public class GameManager : MonoBehaviour
         if (mergeCount == 0)
         {
             Debug.Log("삭제할 카드가 없습니다.");
-            return;
-        }
-
-        if (mergeCount > 3)
-        {
-            Debug.Log("한 번에 삭제할 수 있는 최대 카드는 3장입니다.");
             return;
         }
 
@@ -667,10 +684,6 @@ public class GameManager : MonoBehaviour
         }
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
-        for (int i = 1; i < mergeCount; i++)
-        {
-            Card card = mergeCards[i].GetComponent<Card>();
-        }
 
         int newValue = firstCard + 1;
         int scoreToAdd = newValue * 1;
@@ -748,7 +761,7 @@ public class GameManager : MonoBehaviour
                 break;
 
             case 3:
-                if (mergeCount == 2) chance = 85f;
+                if (mergeCount == 2) chance = 0.85f; // 수정: 85f -> 0.85f
                 else if (mergeCount == 3) chance = 0.82f;
                 else if (mergeCount == 4) chance = 0.80f;
                 break;
@@ -821,11 +834,19 @@ public class GameManager : MonoBehaviour
 
     public void MoveCardToMerge(GameObject card)
     {
-        if (mergeCount >= maxMergeSize)
+        // 연출 중에는 카드 이동 불가
+        if (!CanInteract())
         {
-            Debug.Log("머지 영역이 가득 찼습니다.!");
+            Debug.Log("연출 중이므로 카드 이동이 제한됩니다.");
             return;
         }
+
+        if (mergeCount >= maxMergeSize)
+        {
+            Debug.Log("머지 영역이 가득 찼습니다!");
+            return;
+        }
+
         for (int i = 0; i < handCount; i++)
         {
             if (handCards[i] == card)
@@ -848,10 +869,5 @@ public class GameManager : MonoBehaviour
         card.transform.SetParent(mergeArea);
         ArrangeMerge();
         UpdateMergeButtonState();
-    }
-
-    void dontmerge()
-    {
-        maxcard.gameObject.SetActive(false);
     }
 }

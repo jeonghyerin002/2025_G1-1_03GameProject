@@ -23,6 +23,10 @@ public class Card : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
     private Material currentMaterial;
+    private GameManager gameManager;
+
+    // 카드별 연출 상태 관리
+    private bool isPlayingCardEffect = false;
 
     void Awake()
     {
@@ -32,6 +36,9 @@ public class Card : MonoBehaviour
             originalMaterial = spriteRenderer.material;
             currentMaterial = originalMaterial;
         }
+
+        // GameManager 참조 획득
+        gameManager = FindObjectOfType<GameManager>();
     }
 
     public void OnEnable()
@@ -199,7 +206,7 @@ public class Card : MonoBehaviour
         }
     }
 
-    // 원래 상태로 복원
+    // 원래 상태로 복구
     public void RestoreOriginalMaterial()
     {
         if (originalMaterial != null && spriteRenderer != null)
@@ -217,12 +224,20 @@ public class Card : MonoBehaviour
     public void PlayMergeSuccessEffect()
     {
         Debug.Log("PlayMergeSuccessEffect 호출됨!");
+
+        if (isPlayingCardEffect)
+        {
+            Debug.Log("이미 카드 효과가 재생 중입니다.");
+            return;
+        }
+
         StartCoroutine(MergeSuccessSequence());
     }
 
     IEnumerator MergeSuccessSequence()
     {
         Debug.Log("MergeSuccessSequence 시작!");
+        isPlayingCardEffect = true;
 
         // 더 간단하고 확실한 테스트
         for (int i = 0; i < 5; i++)
@@ -237,10 +252,11 @@ public class Card : MonoBehaviour
             yield return new WaitForSeconds(0.3f);
         }
 
-        // 원래 색으로 복원
+        // 원래 색으로 복구
         spriteRenderer.color = Color.white;
-        Debug.Log("원래 색으로 복원!");
+        Debug.Log("원래 색으로 복구!");
 
+        isPlayingCardEffect = false;
         Debug.Log("MergeSuccessSequence 완료!");
     }
 
@@ -248,12 +264,20 @@ public class Card : MonoBehaviour
     public void PlayMergeFailureEffect()
     {
         Debug.Log("PlayMergeFailureEffect 호출됨!");
+
+        if (isPlayingCardEffect)
+        {
+            Debug.Log("이미 카드 효과가 재생 중입니다.");
+            return;
+        }
+
         StartCoroutine(MergeFailureSequence());
     }
 
     IEnumerator MergeFailureSequence()
     {
         Debug.Log("MergeFailureSequence 시작!");
+        isPlayingCardEffect = true;
 
         // 1. 빨간색으로 깜빡임
         Color originalColor = spriteRenderer.color;
@@ -285,6 +309,7 @@ public class Card : MonoBehaviour
         // 3. 흔들리며 사라지기
         transform.DOShakePosition(0.5f, strength: 20f);
 
+        isPlayingCardEffect = false;
         Debug.Log("MergeFailureSequence 완료!");
     }
 
@@ -292,12 +317,20 @@ public class Card : MonoBehaviour
     public void PlayDeleteEffect()
     {
         Debug.Log("PlayDeleteEffect 호출됨!");
+
+        if (isPlayingCardEffect)
+        {
+            Debug.Log("이미 카드 효과가 재생 중입니다.");
+            return;
+        }
+
         StartCoroutine(DeleteSequence());
     }
 
     IEnumerator DeleteSequence()
     {
         Debug.Log("DeleteSequence 시작!");
+        isPlayingCardEffect = true;
 
         // 1. 폭발 효과
         Debug.Log("폭발 효과 시작!");
@@ -324,18 +357,32 @@ public class Card : MonoBehaviour
         transform.DOMoveY(transform.position.y + 3f, 0.5f);
         spriteRenderer.DOFade(0f, 0.5f);
 
+        isPlayingCardEffect = false;
         Debug.Log("DeleteSequence 완료!");
     }
 
-    // 호버 효과 (마우스 올렸을 때)
+    // 호버 효과 (마우스 올릴 때)
     public void PlayHoverEffect()
     {
+        // 연출 중이거나 게임 상호작용이 불가능할 때는 호버 효과 없음
+        if (isPlayingCardEffect ||
+            (gameManager != null && !gameManager.CanInteract()))
+        {
+            return;
+        }
+
         ApplyShinyEffect();
     }
 
     // 호버 해제
     public void StopHoverEffect()
     {
+        // 연출 중일 때는 호버 해제하지 않음
+        if (isPlayingCardEffect)
+        {
+            return;
+        }
+
         RestoreOriginalMaterial();
     }
 
@@ -364,4 +411,10 @@ public class Card : MonoBehaviour
     }
 
     #endregion
+
+    // 외부에서 카드 효과 상태 확인용
+    public bool IsPlayingEffect()
+    {
+        return isPlayingCardEffect;
+    }
 }
