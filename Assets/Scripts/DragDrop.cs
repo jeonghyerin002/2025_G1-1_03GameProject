@@ -110,6 +110,15 @@ public class DragDrop : MonoBehaviour
         }
         else if (IsOverArea(gameManager.mergeArea))
         {
+            // 이미 머지 영역에 있는 카드라면 그냥 정렬만 하고 끝
+            if (wasInMergeArea)
+            {
+                Debug.Log("같은 머지 영역 내에서 이동 - 정렬만 수행");
+                gameManager.ArrangeMerge();
+                return;
+            }
+
+            // 머지 영역이 가득 찼는지 확인 (기존 코드)
             if (gameManager.mergeCount >= gameManager.maxMergeSize)
             {
                 Debug.Log("머지 영역이 가득 찼습니다.");
@@ -117,7 +126,7 @@ public class DragDrop : MonoBehaviour
             }
             else
             {
-                // GameManager의 MoveCardToMerge 사용 (이미 상호작용 체크 포함)
+                // GameManager의 MoveCardToMerge 사용 (기존 코드)
                 gameManager.MoveCardToMerge(gameObject);
             }
         }

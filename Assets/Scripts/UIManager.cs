@@ -32,7 +32,7 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     public void GameStartButtonAction()
     {
-        SceneManager.LoadScene("CardScene");
+        SceneManager.LoadScene("Dialog_0");
 
     }
 

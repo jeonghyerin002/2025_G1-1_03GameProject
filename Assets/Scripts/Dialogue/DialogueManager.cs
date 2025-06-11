@@ -21,23 +21,29 @@ public class DialogueManager : MonoBehaviour
     public float typingSpeed = 0.05f;
     public bool skipTypingOnClick = true;
 
+    [Header("완료 후 UI")]
+    public GameObject actionPanel; // 버튼들이 있는 패널
+
     private DialogueDataSO currentDialogue;
     private int currentLineIndex = 0;
     private bool isDialogueActive = false;
     private bool isTyping = false;
     private Coroutine typingCoroutine;
 
-
     void Start()
     {
         DialoguePanel.SetActive(false);
         nextButton.onClick.AddListener(HandleNextInput);
+
+        // 처음엔 액션 패널 숨기기
+        if (actionPanel != null)
+            actionPanel.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(isDialogueActive && Input.GetKeyDown(KeyCode.Space))
+        if (isDialogueActive && Input.GetKeyDown(KeyCode.Space))
         {
             HandleNextInput();
         }
@@ -47,7 +53,7 @@ public class DialogueManager : MonoBehaviour
     {
         isTyping = true;
         dialogueText.text = "";
-      
+
         for (int i = 0; i < textToType.Length; i++)
         {
             dialogueText.text += textToType[i];
@@ -65,7 +71,7 @@ public class DialogueManager : MonoBehaviour
         }
         isTyping = false;
 
-        if(currentDialogue !=null && currentLineIndex < currentDialogue.dialogueLines.Count)
+        if (currentDialogue != null && currentLineIndex < currentDialogue.dialogueLines.Count)
         {
             dialogueText.text = currentDialogue.dialogueLines[currentLineIndex];
         }
@@ -95,7 +101,24 @@ public class DialogueManager : MonoBehaviour
 
         isDialogueActive = false;
         isTyping = false;
-        DialoguePanel.SetActive(false);
+
+        // DialogueStageController에게 대사 끝났다고 알림
+        DialogueStageController controller = FindObjectOfType<DialogueStageController>();
+        if (controller != null)
+        {
+            controller.OnDialogueFinished();
+        }
+        else
+        {
+            // 기존 방식 (모든 대사가 끝남)
+            DialoguePanel.SetActive(false);
+
+            if (actionPanel != null)
+            {
+                actionPanel.SetActive(true);
+            }
+        }
+
         currentLineIndex = 0;
     }
 
@@ -103,7 +126,7 @@ public class DialogueManager : MonoBehaviour
     {
         currentLineIndex++;
 
-        if(currentLineIndex >= currentDialogue.dialogueLines.Count)
+        if (currentLineIndex >= currentDialogue.dialogueLines.Count)
         {
             EndDialogue();
         }
@@ -112,8 +135,6 @@ public class DialogueManager : MonoBehaviour
             ShowCurrentLine();
         }
     }
-    
-
 
     public void HandleNextInput()
     {
@@ -121,7 +142,7 @@ public class DialogueManager : MonoBehaviour
         {
             CompleteTyping();
         }
-        else if(!isTyping)
+        else if (!isTyping)
         {
             ShowNextLine();
         }
@@ -139,11 +160,15 @@ public class DialogueManager : MonoBehaviour
 
     public void StartDialogue(DialogueDataSO dialogue)
     {
-        if(dialogue == null || dialogue.dialogueLines.Count == 0) return;
+        if (dialogue == null || dialogue.dialogueLines.Count == 0) return;
 
         currentDialogue = dialogue;
         currentLineIndex = 0;
         isDialogueActive = true;
+
+        // 액션 패널 숨기고 대사창 켜기
+        if (actionPanel != null)
+            actionPanel.SetActive(false);
 
         DialoguePanel.SetActive(true);
         characterNameText.text = dialogue.characterName;
@@ -153,7 +178,6 @@ public class DialogueManager : MonoBehaviour
             if (dialogue.characterImage != null)
             {
                 characterImage.sprite = dialogue.characterImage;
-
             }
             else
             {
@@ -163,6 +187,4 @@ public class DialogueManager : MonoBehaviour
 
         ShowCurrentLine();
     }
-    // Start is called before the first frame update
-   
 }

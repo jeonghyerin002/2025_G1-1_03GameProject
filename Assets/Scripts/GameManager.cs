@@ -26,6 +26,11 @@ public class GameManager : MonoBehaviour
     public GameObject mergeSuccessEffect;
     public GameObject mergeFailEffect;
 
+    // 스테이지 시스템 UI
+    [Header("스테이지 시스템")]
+    public TextMeshProUGUI stageText; // 스테이지 표시 UI
+    public TextMeshProUGUI targetScoreText; // 목표 점수 표시 UI
+
     public UIManager uiManager;
 
     public float cardSpacing = 2.0f;
@@ -41,6 +46,9 @@ public class GameManager : MonoBehaviour
 
     public int stage;
     public int score;
+
+    // 클리어 연출 상태 변수 추가
+    private bool isClearEffectPlaying = false;
 
     public int[] prefedinedDeck = new int[]
     {
@@ -96,17 +104,13 @@ public class GameManager : MonoBehaviour
     // 모든 상호작용이 가능한지 확인
     public bool CanInteract()
     {
-        return !isPlayingEffect && !isMergeEffectPlaying && !isDeleteEffectPlaying;
+        return !isPlayingEffect && !isMergeEffectPlaying && !isDeleteEffectPlaying && !isClearEffectPlaying;
     }
 
     void Start()
     {
-        deckCards = new GameObject[prefedinedDeck.Length];
-        handCards = new GameObject[maxHandSize];
-        mergeCards = new GameObject[maxMergeSize];
-
-        InitializeDeck();
-        ShuffleDeck();
+        // 스테이지 시스템 먼저 초기화
+        InitializeStage();
 
         if (UIManager.Instance != null)
         {
@@ -140,7 +144,35 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 삭제 버튼 클릭 핸들러 분리
+    void InitializeStage()
+    {
+        if (StageManager.Instance != null)
+        {
+            StageDataSO currentStageData = StageManager.Instance.GetCurrentStageData();
+
+            // 덱을 스테이지별로 설정
+            prefedinedDeck = currentStageData.customDeck;
+
+            // UI 업데이트
+            if (stageText != null)
+                stageText.text = "Stage " + StageManager.Instance.currentStage;
+
+            if (targetScoreText != null)
+                targetScoreText.text = "목표: " + currentStageData.targetScore + "점";
+
+            Debug.Log($"스테이지 {StageManager.Instance.currentStage} 시작!");
+        }
+
+        // 배열 초기화
+        deckCards = new GameObject[prefedinedDeck.Length];
+        handCards = new GameObject[maxHandSize];
+        mergeCards = new GameObject[maxMergeSize];
+
+        InitializeDeck();
+        ShuffleDeck();
+    }
+
+    // 삭제 버튼 클릭 핸들러 부분
     void OnDeleteButtonClicked()
     {
         Debug.Log($"삭제 버튼 클릭! 현재 mergeCount: {mergeCount}, CanInteract: {CanInteract()}");
@@ -181,7 +213,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 머지 성공 쉐이더 효과 적용
+    // 머지 성공 셰이더 효과 적용
     void ApplyMergeSuccessEffects()
     {
         Debug.Log($"성공 효과 적용 시작! mergeCount: {mergeCount}");
@@ -211,7 +243,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 머지 실패 쉐이더 효과 적용
+    // 머지 실패 셰이더 효과 적용
     void ApplyMergeFailureEffects()
     {
         Debug.Log($"실패 효과 적용 시작! mergeCount: {mergeCount}");
@@ -331,7 +363,7 @@ public class GameManager : MonoBehaviour
             });
         }
 
-        // 카드들에 삭제 쉐이더 효과 적용
+        // 카드들에 삭제 셰이더 효과 적용
         Debug.Log($"삭제 효과 적용 시작! mergeCount: {mergeCount}");
 
         for (int i = 0; i < mergeCount; i++)
@@ -423,12 +455,12 @@ public class GameManager : MonoBehaviour
             int newValue = firstCard + 1;
             int scoreToAdd = newValue * 1;
 
-            // 쉐이더 효과 먼저 적용
+            // 셰이더 효과 먼저 적용
             ApplyMergeSuccessEffects();
 
             StartCoroutine(ShowMergeSuccess(newValue, scoreToAdd));
 
-            // 잠시 후 실제 머지 처리 (순차적으로)
+            // 잠시 후 실제 머지 처리 (수정됨으로)
             StartCoroutine(DelayedMergeCards());
 
             Debug.Log("성공 했습니다!!!!!!!!!!!!!!");
@@ -436,18 +468,18 @@ public class GameManager : MonoBehaviour
         else
         {
             // 실패!
-            // 쉐이더 효과 먼저 적용
+            // 셰이더 효과 먼저 적용
             ApplyMergeFailureEffects();
 
             Debug.Log("실패했습니다!!!!!!!!!!!!");
             StartCoroutine(ShowMergeFailure());
 
-            // 잠시 후 카드 삭제 (순차적으로)
+            // 잠시 후 카드 삭제 (수정됨으로)
             StartCoroutine(DelayedDeleteMergeCards());
         }
     }
 
-    // 지연된 머지 처리 (연출 후) - 순차적으로 복구
+    // 지연된 머지 처리 (연출 후) - 수정됨으로 복구
     IEnumerator DelayedMergeCards()
     {
         Debug.Log("DelayedMergeCards 시작");
@@ -465,7 +497,7 @@ public class GameManager : MonoBehaviour
         RestoreButtonsAfterEffect();
     }
 
-    // 지연된 카드 삭제 (연출 후) - 순차적으로 복구  
+    // 지연된 카드 삭제 (연출 후) - 수정됨으로 복구  
     IEnumerator DelayedDeleteMergeCards()
     {
         Debug.Log("DelayedDeleteMergeCards 시작");
@@ -736,10 +768,64 @@ public class GameManager : MonoBehaviour
 
     public void CheckScore()
     {
-        if (score >= roundSOs[gameRound - 1].score)
+        if (StageManager.Instance != null)
         {
-            Debug.Log("승리");
+            StageDataSO currentStageData = StageManager.Instance.GetCurrentStageData();
+
+            if (score >= currentStageData.targetScore)
+            {
+                Debug.Log("스테이지 클리어!");
+                StageManager.Instance.isGameCleared = true;
+
+                // 클리어 연출 시작
+                StartCoroutine(ShowClearEffect());
+            }
         }
+    }
+    // 새로운 클리어 연출 함수
+    IEnumerator ShowClearEffect()
+    {
+        isClearEffectPlaying = true;
+        SetButtonsInteractable(false); // 모든 버튼 비활성화
+
+        // 클리어 텍스트 표시
+        if (mergeResultText != null)
+        {
+            mergeResultText.text = "스테이지 클리어!";
+            mergeResultText.color = Color.yellow;
+            mergeResultText.gameObject.SetActive(true);
+
+            // 클리어 연출 애니메이션
+            mergeResultText.transform.localScale = Vector3.zero;
+            mergeResultText.transform.DOScale(1.5f, 0.5f).SetEase(Ease.OutBack);
+
+            yield return new WaitForSeconds(0.5f);
+            mergeResultText.transform.DOScale(1f, 0.3f);
+            yield return new WaitForSeconds(1.5f);
+
+            mergeResultText.DOFade(0f, 0.5f).OnComplete(() => {
+                mergeResultText.gameObject.SetActive(false);
+                mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
+            });
+        }
+
+        yield return new WaitForSeconds(0.5f); // 추가 대기
+
+        isClearEffectPlaying = false;
+
+        // 스테이지 증가하고 다이얼로그 씬으로 이동
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.currentStage++;
+            StageManager.Instance.isGameCleared = false;
+            Debug.Log($"다음 스테이지({StageManager.Instance.currentStage}) 다이얼로그 씬으로 이동!");
+            StageManager.Instance.LoadDialogueScene(); // 다이얼로그 씬으로
+        }
+    }
+    IEnumerator WaitAndLoadDialogue()
+    {
+        yield return new WaitForSeconds(2f); // 2초 대기
+        StageManager.Instance.LoadDialogueScene();
     }
 
     void LuckyChance()
@@ -843,7 +929,7 @@ public class GameManager : MonoBehaviour
 
         if (mergeCount >= maxMergeSize)
         {
-            Debug.Log("머지 영역이 가득 찼습니다!");
+            Debug.Log("머지 영역이 가득 참습니다!");
             return;
         }
 
