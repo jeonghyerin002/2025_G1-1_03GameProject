@@ -265,19 +265,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 머지 성공 연출
     IEnumerator ShowMergeSuccess(int newCardValue, int scoreGained)
     {
         isMergeEffectPlaying = true;
 
-        // 성공 텍스트 표시
+        if (EffectManager.Instance != null)
+        {
+            EffectManager.Instance.PlayMergeSuccessEffect(mergeArea.position);
+        }
+
+        // 기존 코드 유지
         if (mergeResultText != null)
         {
             mergeResultText.text = $"성공! +{scoreGained}점";
             mergeResultText.color = Color.green;
             mergeResultText.gameObject.SetActive(true);
 
-            // 텍스트 애니메이션
             mergeResultText.transform.localScale = Vector3.zero;
             mergeResultText.transform.DOScale(1.2f, 0.3f).SetEase(Ease.OutBack);
 
@@ -287,14 +290,13 @@ public class GameManager : MonoBehaviour
 
             yield return new WaitForSeconds(1f);
 
-            // 페이드 아웃
             mergeResultText.DOFade(0f, 0.5f).OnComplete(() => {
                 mergeResultText.gameObject.SetActive(false);
                 mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
             });
         }
 
-        // 성공 이펙트 활성화
+        // 기존 성공 이펙트도 유지
         if (mergeSuccessEffect != null)
         {
             mergeSuccessEffect.SetActive(true);
@@ -305,31 +307,35 @@ public class GameManager : MonoBehaviour
         isMergeEffectPlaying = false;
     }
 
-    // 머지 실패 연출
+    // 기존 ShowMergeFailure 함수에 이펙트만 추가
     IEnumerator ShowMergeFailure()
     {
         isMergeEffectPlaying = true;
 
-        // 실패 텍스트 표시
+        // ★ 이펙트 재생 추가 (합성 영역 위치에서)
+        if (EffectManager.Instance != null)
+        {
+            EffectManager.Instance.PlayMergeFailEffect(mergeArea.position);
+        }
+
+        // 기존 코드 유지
         if (mergeResultText != null)
         {
             mergeResultText.text = "실패!";
             mergeResultText.color = Color.red;
             mergeResultText.gameObject.SetActive(true);
 
-            // 흔들기 애니메이션
             mergeResultText.transform.DOShakePosition(1f, strength: 30f, vibrato: 20);
 
             yield return new WaitForSeconds(1.5f);
 
-            // 페이드 아웃
             mergeResultText.DOFade(0f, 0.5f).OnComplete(() => {
                 mergeResultText.gameObject.SetActive(false);
                 mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
             });
         }
 
-        // 실패 이펙트 활성화
+        // 기존 실패 이펙트도 유지
         if (mergeFailEffect != null)
         {
             mergeFailEffect.SetActive(true);
@@ -340,35 +346,37 @@ public class GameManager : MonoBehaviour
         isMergeEffectPlaying = false;
     }
 
-    // 삭제 연출
+    // 기존 ShowDeleteEffect 함수에 이펙트만 추가
     IEnumerator ShowDeleteEffect()
     {
         isDeleteEffectPlaying = true;
         SetButtonsInteractable(false);
 
-        // 삭제 텍스트 표시
+        // ★ 이펙트 재생 추가 (합성 영역 위치에서)
+        if (EffectManager.Instance != null)
+        {
+            EffectManager.Instance.PlayDeleteEffect(mergeArea.position);
+        }
+
+        // 기존 코드 유지
         if (mergeResultText != null)
         {
             mergeResultText.text = "카드 삭제!";
-            mergeResultText.color = new Color(1f, 0.5f, 0f); // 주황색
+            mergeResultText.color = new Color(1f, 0.5f, 0f);
             mergeResultText.gameObject.SetActive(true);
 
-            // 펄스 애니메이션
             mergeResultText.transform.localScale = Vector3.one;
             mergeResultText.transform.DOScale(1.3f, 0.3f).SetLoops(3, LoopType.Yoyo);
 
             yield return new WaitForSeconds(1f);
 
-            // 페이드 아웃
             mergeResultText.DOFade(0f, 0.5f).OnComplete(() => {
                 mergeResultText.gameObject.SetActive(false);
                 mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
             });
         }
 
-        // 카드들에 삭제 셰이더 효과 적용
-        Debug.Log($"삭제 효과 적용 시작! mergeCount: {mergeCount}");
-
+        // 기존 카드 삭제 애니메이션도 유지
         for (int i = 0; i < mergeCount; i++)
         {
             if (mergeCards[i] != null)
@@ -376,24 +384,20 @@ public class GameManager : MonoBehaviour
                 Card cardComponent = mergeCards[i].GetComponent<Card>();
                 if (cardComponent != null)
                 {
-                    // 각 카드마다 약간의 딜레이
                     float delay = i * 0.1f;
                     StartCoroutine(DelayedDeleteEffect(cardComponent, delay));
                 }
             }
         }
 
-        // 모든 애니메이션이 끝날 때까지 대기
         yield return new WaitForSeconds(0.5f + (mergeCount * 0.1f) + 1.5f);
 
-        // 실제로 카드들을 삭제
         DeleteMergeCards();
 
         isDeleteEffectPlaying = false;
         RestoreButtonsAfterEffect();
     }
 
-    // 지연된 삭제 효과
     IEnumerator DelayedDeleteEffect(Card card, float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -401,6 +405,50 @@ public class GameManager : MonoBehaviour
         if (card != null)
         {
             card.PlayDeleteEffect();
+        }
+    }
+
+    IEnumerator ShowClearEffect()
+    {
+        isClearEffectPlaying = true;
+        SetButtonsInteractable(false);
+
+        // ★ 이펙트 재생 추가 (화면 중앙에서)
+        if (EffectManager.Instance != null)
+        {
+            EffectManager.Instance.PlayWinEffect(Camera.main.transform.position);
+        }
+
+        // 기존 코드 유지
+        if (mergeResultText != null)
+        {
+            mergeResultText.text = "스테이지 클리어!";
+            mergeResultText.color = Color.yellow;
+            mergeResultText.gameObject.SetActive(true);
+
+            mergeResultText.transform.localScale = Vector3.zero;
+            mergeResultText.transform.DOScale(1.5f, 0.5f).SetEase(Ease.OutBack);
+
+            yield return new WaitForSeconds(0.5f);
+            mergeResultText.transform.DOScale(1f, 0.3f);
+            yield return new WaitForSeconds(1.5f);
+
+            mergeResultText.DOFade(0f, 0.5f).OnComplete(() => {
+                mergeResultText.gameObject.SetActive(false);
+                mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
+            });
+        }
+
+        yield return new WaitForSeconds(0.5f);
+
+        isClearEffectPlaying = false;
+
+        // 기존 스테이지 진행 로직 유지
+        if (StageManager.Instance != null)
+        {
+            StageManager.Instance.currentStage++;
+            StageManager.Instance.isGameCleared = false;
+            StageManager.Instance.LoadDialogueScene();
         }
     }
 
@@ -785,46 +833,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    // 새로운 클리어 연출 함수
-    IEnumerator ShowClearEffect()
-    {
-        isClearEffectPlaying = true;
-        SetButtonsInteractable(false); // 모든 버튼 비활성화
-
-        // 클리어 텍스트 표시
-        if (mergeResultText != null)
-        {
-            mergeResultText.text = "스테이지 클리어!";
-            mergeResultText.color = Color.yellow;
-            mergeResultText.gameObject.SetActive(true);
-
-            // 클리어 연출 애니메이션
-            mergeResultText.transform.localScale = Vector3.zero;
-            mergeResultText.transform.DOScale(1.5f, 0.5f).SetEase(Ease.OutBack);
-
-            yield return new WaitForSeconds(0.5f);
-            mergeResultText.transform.DOScale(1f, 0.3f);
-            yield return new WaitForSeconds(1.5f);
-
-            mergeResultText.DOFade(0f, 0.5f).OnComplete(() => {
-                mergeResultText.gameObject.SetActive(false);
-                mergeResultText.color = new Color(mergeResultText.color.r, mergeResultText.color.g, mergeResultText.color.b, 1f);
-            });
-        }
-
-        yield return new WaitForSeconds(0.5f); // 추가 대기
-
-        isClearEffectPlaying = false;
-
-        // 스테이지 증가하고 다이얼로그 씬으로 이동
-        if (StageManager.Instance != null)
-        {
-            StageManager.Instance.currentStage++;
-            StageManager.Instance.isGameCleared = false;
-            Debug.Log($"다음 스테이지({StageManager.Instance.currentStage}) 다이얼로그 씬으로 이동!");
-            StageManager.Instance.LoadDialogueScene(); // 다이얼로그 씬으로
-        }
-    }
+   
     IEnumerator WaitAndLoadDialogue()
     {
         yield return new WaitForSeconds(2f); // 2초 대기

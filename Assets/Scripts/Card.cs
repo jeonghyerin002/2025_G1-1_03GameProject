@@ -236,28 +236,35 @@ public class Card : MonoBehaviour
 
     IEnumerator MergeSuccessSequence()
     {
-        Debug.Log("MergeSuccessSequence 시작!");
-        isPlayingCardEffect = true;
 
-        // 더 간단하고 확실한 테스트
-        for (int i = 0; i < 5; i++)
+        isPlayingCardEffect = true;       
+
+       
+        ApplyDisolveEffect(0f);
+
+        // Disolve_Value를 서서히 증가
+        float disolveTime = 1f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < disolveTime)
         {
-            // 빨강과 파랑 깜빡임 (각각 0.3초씩)
-            spriteRenderer.color = Color.red;
-            Debug.Log($"빨간색으로 변경! ({i + 1}/5)");
-            yield return new WaitForSeconds(0.3f);
+            elapsedTime += Time.deltaTime;
+            float disolveValue = Mathf.Lerp(0f, 1f, elapsedTime / disolveTime);
 
-            spriteRenderer.color = Color.blue;
-            Debug.Log($"파란색으로 변경! ({i + 1}/5)");
-            yield return new WaitForSeconds(0.3f);
+            if (currentMaterial != null && currentMaterial.HasProperty("Disolve_Value"))
+            {
+                currentMaterial.SetFloat("Disolve_Value", disolveValue);
+            }
+
+            yield return null;
         }
 
-        // 원래 색으로 복구
-        spriteRenderer.color = Color.white;
-        Debug.Log("원래 색으로 복구!");
+        // 3. 흔들리며 사라지기
+        transform.DOShakePosition(0.5f, strength: 20f);
 
         isPlayingCardEffect = false;
-        Debug.Log("MergeSuccessSequence 완료!");
+       
+
     }
 
     // 머지 실패 시 연출

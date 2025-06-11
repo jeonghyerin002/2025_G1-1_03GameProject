@@ -40,11 +40,11 @@ Material:
     - PixelUV_Size: 18.74812
     - PixelUV_Size_1: 0.93249893
     - PixelXYUV_SizeX_1: 51.289555
-    - PixelXYUV_SizeY_1: 32
+    - PixelXYUV_SizeY_1: 63
     - Pixel_Fade: 18.82359
     - Pixel_Size: 42.5
     - _ColorMask: 15
-    - _LerpUV_Fade_1: 1
+    - _LerpUV_Fade_1: 0.82
     - _Make3DFX_Dist_1: -0.36862513
     - _Make3DFX_Light_1: -0.64
     - _Make3DFX_PosX_1: 0.53

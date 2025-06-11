@@ -32,8 +32,8 @@ Material:
     m_Floats:
     - Displacement_Value: 0.3
     - Effect_Fading: 1
-    - Fire_Addition: 0.33
-    - Fire_Displacement_Value: -0.003
+    - Fire_Addition: 4
+    - Fire_Displacement_Value: 0.3
     - Fire_Pixel_Size: 20.3
     - PixelSnap: 0
     - Pixel_Size: 22
