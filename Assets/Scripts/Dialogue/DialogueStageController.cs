@@ -68,7 +68,8 @@ public class DialogueStageController : MonoBehaviour
             dialogueManager.StartDialogue(dialogue);
         }
         else
-        {          
+        {
+            Debug.Log(1);
             ShowContinueButton();
         }
     }
