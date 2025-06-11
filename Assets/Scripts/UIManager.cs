@@ -45,4 +45,15 @@ public class UIManager : MonoBehaviour
     {
         HelpPanel.SetActive(false);
     }
+
+    public void OnClickStar()
+    {
+        SceneManager.LoadScene("DialogueScene");
+
+    }
+
+    public void OnClickGoToTutorial()
+    {
+        SceneManager.LoadScene("TutorialScene");
+    }
 }
