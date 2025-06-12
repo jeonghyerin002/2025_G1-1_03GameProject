@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -88,6 +89,8 @@ public class GameManager : MonoBehaviour
     private bool isMergeEffectPlaying = false;
     private bool isDeleteEffectPlaying = false;
 
+    private bool isAnyEffectPlaying = false;
+
     // 드래그 제어를 위한 공개 함수들
     public bool IsPlayingEffect()
     {
@@ -107,7 +110,8 @@ public class GameManager : MonoBehaviour
     // 모든 상호작용이 가능한지 확인
     public bool CanInteract()
     {
-        return !isPlayingEffect && !isMergeEffectPlaying && !isDeleteEffectPlaying && !isClearEffectPlaying;
+        return !isPlayingEffect && !isMergeEffectPlaying && !isDeleteEffectPlaying &&
+               !isClearEffectPlaying && !isAnyEffectPlaying;  
     }
 
     void Start()
@@ -695,9 +699,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // 카드가 없으면 게임 종료
         if (deckCount <= 0)
         {
-            ShowWarningMessage("덱 이상 카드를 뽑을 수 없을 거 같아", Color.red);
+            Debug.Log("게임 종료! 카드가 모두 소진되었습니다.");
+            StartCoroutine(ShowGameEndScreen());
             return;
         }
 
@@ -716,6 +722,44 @@ public class GameManager : MonoBehaviour
         drawnCard.transform.SetParent(handArea);
 
         ArrangeHand();
+    }
+
+    // 게임 종료 화면을 보여주는 새로운 함수 추가
+    IEnumerator ShowGameEndScreen()
+    {
+        // 모든 버튼 비활성화
+        SetButtonsInteractable(false);
+
+        // 게임 종료 이펙트 재생 (추가된 부분)
+        if (EffectManager.Instance != null)
+        {
+            EffectManager.Instance.PlayGameEndEffect(Camera.main.transform.position);
+        }
+
+        // 게임 종료 메시지 표시
+        if (mergeResultText != null)
+        {
+            mergeResultText.text = "게임 종료!\n최종 점수: " + score;
+            mergeResultText.color = Color.cyan;
+            mergeResultText.gameObject.SetActive(true);
+
+            // 텍스트 애니메이션
+            mergeResultText.transform.localScale = Vector3.zero;
+            mergeResultText.transform.DOScale(1.2f, 0.5f).SetEase(Ease.OutBack);
+
+            yield return new WaitForSeconds(0.5f);
+            mergeResultText.transform.DOScale(1f, 0.3f);
+            yield return new WaitForSeconds(3f); // 3초 동안 메시지 표시
+        }
+
+        // 첫 화면으로 돌아가기
+        GoToMainMenu();
+    }
+
+    void GoToMainMenu()
+    {
+        Debug.Log("메인 메뉴로 돌아갑니다.");
+        SceneManager.LoadScene("Level_0"); //
     }
 
     void UpdateMergeButtonState()
@@ -967,5 +1011,45 @@ public class GameManager : MonoBehaviour
         card.transform.SetParent(mergeArea);
         ArrangeMerge();
         UpdateMergeButtonState();
+    }
+
+    public void SetAnyEffectPlaying(bool playing)
+    {
+        isAnyEffectPlaying = playing;
+
+        if (playing)
+        {
+            StopAllCardDragging(); // 이펙트 시작하면 모든 드래그 정지
+        }
+    }
+
+    // 모든 카드 드래그 정지
+    void StopAllCardDragging()
+    {
+        // 손패 카드 드래그 정지
+        for (int i = 0; i < handCount; i++)
+        {
+            if (handCards[i] != null)
+            {
+                DragDrop dragDrop = handCards[i].GetComponent<DragDrop>();
+                if (dragDrop != null)
+                {
+                    dragDrop.ForceStopDrag();
+                }
+            }
+        }
+
+        // 머지 카드 드래그 정지
+        for (int i = 0; i < mergeCount; i++)
+        {
+            if (mergeCards[i] != null)
+            {
+                DragDrop dragDrop = mergeCards[i].GetComponent<DragDrop>();
+                if (dragDrop != null)
+                {
+                    dragDrop.ForceStopDrag();
+                }
+            }
+        }
     }
 }
