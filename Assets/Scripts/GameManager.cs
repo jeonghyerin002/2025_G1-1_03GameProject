@@ -968,6 +968,8 @@ public class GameManager : MonoBehaviour
                 else if (mergeCount == 4) chance = 0f;
                 break;
 
+
+
             default:
                 Debug.LogWarning($"카드 타입 {firstCard}는 정의되지 않았습니다.");
                 break;

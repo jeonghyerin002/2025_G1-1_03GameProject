@@ -13,7 +13,7 @@ public class DialogueStageController : MonoBehaviour
     public DialogueDataSO[] character2Dialogues;
 
     private DialogueManager dialogueManager;
-    private int dialogueStep = 0; // 0: 캐릭터1, 1: 캐릭터2
+    private int dialogueStep = 1; // 0: 캐릭터1, 1: 캐릭터2
     private bool allDialoguesFinished = false;
 
     void Start()
