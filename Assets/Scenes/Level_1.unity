@@ -16452,9 +16452,9 @@ MonoBehaviour:
   stageDataArray:
   - {fileID: 11400000, guid: c6490bb7d2472da40881ee8051cadf4e, type: 2}
   - {fileID: 11400000, guid: 4342f1236ca300546b843fd77126b58c, type: 2}
+  - {fileID: 11400000, guid: fd946b00be44fc64ea40d88807acd365, type: 2}
   - {fileID: 11400000, guid: 4ee9372071db0354abbef0f4f3e95ecc, type: 2}
   - {fileID: 11400000, guid: c5116c80017a0a24f927563faf14ed5e, type: 2}
-  - {fileID: 11400000, guid: 04f6eace0a792e04c85c78a28cea44fa, type: 2}
 --- !u!4 &1208508050
 Transform:
   m_ObjectHideFlags: 0
