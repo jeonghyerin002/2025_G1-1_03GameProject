@@ -11,9 +11,15 @@ public class DialogueStageController : MonoBehaviour
     [Header("대화 데이터")]
     public DialogueDataSO[] character1Dialogues;
     public DialogueDataSO[] character2Dialogues;
+    public DialogueDataSO[] characther3Dialogues;
+    public DialogueDataSO[] characther4Dialogues;
+    public DialogueDataSO[] characther5Dialogues;
+    public DialogueDataSO[] characther6Dialogues;
+    public DialogueDataSO[] characther7Dialogues;
+    public DialogueDataSO[] characther8Dialogues;
 
     private DialogueManager dialogueManager;
-    private int dialogueStep = 1; // 0: 캐릭터1, 1: 캐릭터2
+    private int dialogueStep = 0; // 0: 캐릭터1, 1: 캐릭터2
     private bool allDialoguesFinished = false;
 
     void Start()
