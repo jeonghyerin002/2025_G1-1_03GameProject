@@ -194,11 +194,13 @@ public class GameManager : MonoBehaviour
         if (mergeCount > 0)
         {
             Debug.Log("삭제 연출 시작!");
+            SoundManager.Instance.PlayDiscard();
             StartCoroutine(ShowDeleteEffect());
         }
         else
         {
             Debug.Log("삭제할 카드가 없습니다. 머지 영역에 카드를 먼저 넣어주세요!");
+            SoundManager.Instance.PlayFullWarning();
             ShowWarningMessage("삭제할 카드가 없어요!", Color.yellow);
         }
     }
@@ -471,6 +473,7 @@ public class GameManager : MonoBehaviour
         if (mergeCount < 2)
         {
             Debug.Log("머지하려면 최소 2장의 카드가 필요합니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -481,16 +484,18 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("같은 숫자의 카드만 머지 할 수 있습니다.");
                 ShowWarningMessage("같은 숫자의 카드만 머지 가능!", Color.yellow);
+                SoundManager.Instance.PlayFullWarning();
                 return;
             }
         }
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
 
-        if (firstCard == 13)
+        if (firstCard == 16)
         {
             ShowWarningMessage("더 이상 합성 할 수 없습니다.", Color.red);
-            Debug.Log("13번 카드이므로 합성 불가");
+            Debug.Log("16번 카드이므로 합성 불가");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -518,6 +523,7 @@ public class GameManager : MonoBehaviour
             // 잠시 후 실제 머지 처리 (수정됨으로)
             StartCoroutine(DelayedMergeCards());
 
+            SoundManager.Instance.PlayMergeSuccess();
             Debug.Log("성공 했습니다!!!!!!!!!!!!!!");
         }
         else
@@ -527,6 +533,7 @@ public class GameManager : MonoBehaviour
             ApplyMergeFailureEffects();
 
             Debug.Log("실패했습니다!!!!!!!!!!!!");
+            SoundManager.Instance.PlayMergeFail();
             StartCoroutine(ShowMergeFailure());
 
             // 잠시 후 카드 삭제 (수정됨으로)
@@ -678,6 +685,7 @@ public class GameManager : MonoBehaviour
 
     public void OnDrawButtonClicked()
     {
+        SoundManager.Instance.PlayMergeArea();
         Debug.Log($"뽑기 버튼 클릭됨! CanInteract: {CanInteract()}");
 
         // 상호작용 불가능한 상태면 무시
@@ -696,6 +704,7 @@ public class GameManager : MonoBehaviour
         if (handCount + mergeCount >= maxHandSize)
         {
             ShowWarningMessage("손에 카드가 가득 참!", Color.yellow);
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -703,9 +712,11 @@ public class GameManager : MonoBehaviour
         if (deckCount <= 0)
         {
             Debug.Log("게임 종료! 카드가 모두 소진되었습니다.");
+            SoundManager.Instance.PlayRoundFail();
             StartCoroutine(ShowGameEndScreen());
             return;
         }
+
 
         GameObject drawnCard = deckCards[0];
 
@@ -779,6 +790,7 @@ public class GameManager : MonoBehaviour
         if (mergeCount == 0)
         {
             Debug.Log("삭제할 카드가 없습니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -798,7 +810,7 @@ public class GameManager : MonoBehaviour
         mergeCount = 0;
         UpdateMergeButtonState();
         ArrangeMerge();
-
+        
         Debug.Log("Merge 영역의 카드들이 삭제되었습니다.");
     }
 
@@ -807,6 +819,7 @@ public class GameManager : MonoBehaviour
         if (mergeCount != 2 && mergeCount != 3 && mergeCount != 4)
         {
             Debug.Log("머지를 하려면 카드가 2개 또는 3개 혹은 4개 필요합니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -820,6 +833,7 @@ public class GameManager : MonoBehaviour
         if (newValue > cardImages.Length)
         {
             Debug.Log("최대 카드 값에 도달 했습니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -870,6 +884,7 @@ public class GameManager : MonoBehaviour
             if (score >= currentStageData.targetScore)
             {
                 Debug.Log("스테이지 클리어!");
+                SoundManager.Instance.PlayRoundSuccess();
                 StageManager.Instance.isGameCleared = true;
 
                 // 클리어 연출 시작
