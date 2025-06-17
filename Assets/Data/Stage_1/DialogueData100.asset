@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a1bc7228364cb34385221f6e1a2fe15, type: 3}
   m_Name: DialogueData100
   m_EditorClassIdentifier: 
-  characterName: "\uC568\uB9AD"
-  characterImage: {fileID: 21300000, guid: 0b23fedf28326a04484c201e8174ae7b, type: 3}
+  characterName: "\uD1A0\uB07C"
+  characterImage: {fileID: 21300000, guid: 72f7ebacdbfc96342ad52bc0e3486c22, type: 3}
   dialogueLines:
-  - "\u201C\u2026\uC7A0\uAE50, \uBC29\uAE08 \uBC29\uAE08 \uC800\uAC70\u2026 \uBE68\uAC04
-    \uB208 \uD1A0\uB07C\uC57C?\u201D"
+  - "\u201C\uB2A6\uC5C8\uC5B4! \uB2A6\uC5C8\uB2E8 \uB9D0\uC774\uC57C! \uADF8\uBD84\uC774
+    \uD654\uB0B4\uC2E0\uB2E4\uACE0!\u201D"
+  - "\u201C\uC6B0\uC120 \uCE74\uB4DC\uB97C \uBC1B\uC544! \uC774\uC0C1\uD55C \uB098\uB77C\uC5D0\uC120
+    \uC774\uAC78\uB85C \uBAA8\uB4E0 \uAC78 \uACB0\uC815\uD574!\u201D"

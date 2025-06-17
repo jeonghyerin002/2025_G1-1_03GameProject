@@ -1527,20 +1527,16 @@ MonoBehaviour:
   actionPanel: {fileID: 772028328}
   character1Dialogues:
   - {fileID: 11400000, guid: 798d148121a84d94abeb90e1c540207a, type: 2}
+  - {fileID: 11400000, guid: 89868b0d01257d647a7be682ea2298b7, type: 2}
+  - {fileID: 11400000, guid: cf8fcdbca15a5f54088507fa9d4ff632, type: 2}
+  - {fileID: 11400000, guid: 5653b61b6153a484eae13a25312a88e9, type: 2}
+  - {fileID: 11400000, guid: e05bba504abe6c549b6877b02e3b53b8, type: 2}
   character2Dialogues:
   - {fileID: 11400000, guid: 6d08c6ddc069bbd488a366fdf779557d, type: 2}
-  character3Dialogues:
-  - {fileID: 11400000, guid: aed7b886e751a0a4b9ce5d9951c627bf, type: 2}
-  character4Dialogues:
-  - {fileID: 11400000, guid: 8d423f4bcdc1fd243a14763acbe75939, type: 2}
-  character5Dialogues:
-  - {fileID: 11400000, guid: f7fd35f1345512a4f8b44e876f2e5727, type: 2}
-  character6Dialogues:
-  - {fileID: 11400000, guid: f3b714f96876b2d4d94fdaf6aa2e4c6a, type: 2}
-  character7Dialogues:
-  - {fileID: 11400000, guid: 455fcd2e0181d3f4e847def2b3cbcd32, type: 2}
-  character8Dialogues:
-  - {fileID: 11400000, guid: 6609a0ec6f136b145bfd2578615e8b34, type: 2}
+  - {fileID: 11400000, guid: f599aab3d4f796a40b22efc311520f2a, type: 2}
+  - {fileID: 11400000, guid: 2c55081abc62f774e9382337e34d8b34, type: 2}
+  - {fileID: 11400000, guid: 92035e0b765cd43419c28265fdaf6789, type: 2}
+  - {fileID: 11400000, guid: 3073cc33b7119db4db8ba98fe49ca81e, type: 2}
 --- !u!4 &1742704954
 Transform:
   m_ObjectHideFlags: 0
