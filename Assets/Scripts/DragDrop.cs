@@ -33,6 +33,7 @@ public class DragDrop : MonoBehaviour
 
     private void OnMouseDown()
     {
+        SoundManager.Instance.PlayCardPlace();
         // GameManager 상태 확인
         if (gameManager != null && !gameManager.CanInteract())
         {
@@ -52,6 +53,7 @@ public class DragDrop : MonoBehaviour
 
     private void OnMouseUp()
     {
+        SoundManager.Instance.PlayCardPlace();
         // GameManager 상태 재확인
         if (gameManager != null && !gameManager.CanInteract())
         {

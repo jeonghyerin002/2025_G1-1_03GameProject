@@ -194,11 +194,13 @@ public class GameManager : MonoBehaviour
         if (mergeCount > 0)
         {
             Debug.Log("삭제 연출 시작!");
+            SoundManager.Instance.PlayDiscard();
             StartCoroutine(ShowDeleteEffect());
         }
         else
         {
             Debug.Log("삭제할 카드가 없습니다. 머지 영역에 카드를 먼저 넣어주세요!");
+            SoundManager.Instance.PlayFullWarning();
             ShowWarningMessage("삭제할 카드가 없어요!", Color.yellow);
         }
     }
@@ -471,6 +473,7 @@ public class GameManager : MonoBehaviour
         if (mergeCount < 2)
         {
             Debug.Log("머지하려면 최소 2장의 카드가 필요합니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -481,16 +484,18 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("같은 숫자의 카드만 머지 할 수 있습니다.");
                 ShowWarningMessage("같은 숫자의 카드만 머지 가능!", Color.yellow);
+                SoundManager.Instance.PlayFullWarning();
                 return;
             }
         }
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
 
-        if (firstCard == 13)
+        if (firstCard == 16)
         {
             ShowWarningMessage("더 이상 합성 할 수 없습니다.", Color.red);
-            Debug.Log("13번 카드이므로 합성 불가");
+            Debug.Log("16번 카드이므로 합성 불가");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -518,6 +523,7 @@ public class GameManager : MonoBehaviour
             // 잠시 후 실제 머지 처리 (수정됨으로)
             StartCoroutine(DelayedMergeCards());
 
+            SoundManager.Instance.PlayMergeSuccess();
             Debug.Log("성공 했습니다!!!!!!!!!!!!!!");
         }
         else
@@ -527,6 +533,7 @@ public class GameManager : MonoBehaviour
             ApplyMergeFailureEffects();
 
             Debug.Log("실패했습니다!!!!!!!!!!!!");
+            SoundManager.Instance.PlayMergeFail();
             StartCoroutine(ShowMergeFailure());
 
             // 잠시 후 카드 삭제 (수정됨으로)
@@ -678,6 +685,7 @@ public class GameManager : MonoBehaviour
 
     public void OnDrawButtonClicked()
     {
+        SoundManager.Instance.PlayMergeArea();
         Debug.Log($"뽑기 버튼 클릭됨! CanInteract: {CanInteract()}");
 
         // 상호작용 불가능한 상태면 무시
@@ -696,6 +704,7 @@ public class GameManager : MonoBehaviour
         if (handCount + mergeCount >= maxHandSize)
         {
             ShowWarningMessage("손에 카드가 가득 참!", Color.yellow);
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -703,9 +712,11 @@ public class GameManager : MonoBehaviour
         if (deckCount <= 0)
         {
             Debug.Log("게임 종료! 카드가 모두 소진되었습니다.");
+            SoundManager.Instance.PlayRoundFail();
             StartCoroutine(ShowGameEndScreen());
             return;
         }
+
 
         GameObject drawnCard = deckCards[0];
 
@@ -779,6 +790,7 @@ public class GameManager : MonoBehaviour
         if (mergeCount == 0)
         {
             Debug.Log("삭제할 카드가 없습니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -798,7 +810,7 @@ public class GameManager : MonoBehaviour
         mergeCount = 0;
         UpdateMergeButtonState();
         ArrangeMerge();
-
+        
         Debug.Log("Merge 영역의 카드들이 삭제되었습니다.");
     }
 
@@ -807,6 +819,7 @@ public class GameManager : MonoBehaviour
         if (mergeCount != 2 && mergeCount != 3 && mergeCount != 4)
         {
             Debug.Log("머지를 하려면 카드가 2개 또는 3개 혹은 4개 필요합니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -820,6 +833,7 @@ public class GameManager : MonoBehaviour
         if (newValue > cardImages.Length)
         {
             Debug.Log("최대 카드 값에 도달 했습니다.");
+            SoundManager.Instance.PlayFullWarning();
             return;
         }
 
@@ -870,6 +884,7 @@ public class GameManager : MonoBehaviour
             if (score >= currentStageData.targetScore)
             {
                 Debug.Log("스테이지 클리어!");
+                SoundManager.Instance.PlayRoundSuccess();
                 StageManager.Instance.isGameCleared = true;
 
                 // 클리어 연출 시작
@@ -890,79 +905,97 @@ public class GameManager : MonoBehaviour
 
         switch (firstCard)
         {
-            case 1:
+            case 1:              // 클로버  A
                 if (mergeCount == 2) chance = 1.0f;
                 else if (mergeCount == 3) chance = 0.97f;
                 else if (mergeCount == 4) chance = 0.95f;
                 break;
-
+                                   //클로버 J
             case 2:
                 if (mergeCount == 2) chance = 0.92f;
                 else if (mergeCount == 3) chance = 0.90f;
-                else if (mergeCount == 4) chance = 0.87f;
+                else if (mergeCount == 4) chance = 0.90f;
                 break;
 
-            case 3:
-                if (mergeCount == 2) chance = 0.85f; // 수정: 85f -> 0.85f
-                else if (mergeCount == 3) chance = 0.82f;
-                else if (mergeCount == 4) chance = 0.80f;
+            case 3:                   //클로버 Q
+                if (mergeCount == 2) chance = 0.89f; // 수정: 85f -> 0.85f
+                else if (mergeCount == 3) chance = 0.86f;
+                else if (mergeCount == 4) chance = 0.85f;
                 break;
 
-            case 4:
-                if (mergeCount == 2) chance = 0.75f;
-                else if (mergeCount == 3) chance = 0.72f;
-                else if (mergeCount == 4) chance = 0.70f;
+            case 4:                   //클로버 K
+                if (mergeCount == 2) chance = 0.80f;
+                else if (mergeCount == 3) chance = 0.78f;
+                else if (mergeCount == 4) chance = 0.75f;
+                break;
+                 
+            case 5:                   //다이야 A
+                if (mergeCount == 2) chance = 0.73f;
+                else if (mergeCount == 3) chance = 0.70f;
+                else if (mergeCount == 4) chance = 0.69f;
                 break;
 
-            case 5:
+            case 6:                   //다이야 J
+                if (mergeCount == 2) chance = 0.67f;
+                else if (mergeCount == 3) chance = 0.65f;
+                else if (mergeCount == 4) chance = 0.62f;
+                break;
+
+            case 7:                  //다이야 Q
+                if (mergeCount == 2) chance = 0.6f;
+                else if (mergeCount == 3) chance = 0.58f;
+                else if (mergeCount == 4) chance = 0.56f;
+                break;
+
+            case 8:                   //다이야 k
                 if (mergeCount == 2) chance = 0.5f;
-                else if (mergeCount == 3) chance = 0.45f;
-                else if (mergeCount == 4) chance = 0.44f;
+                else if (mergeCount == 3) chance = 0.48f;
+                else if (mergeCount == 4) chance = 0.46f;
                 break;
 
-            case 6:
-                if (mergeCount == 2) chance = 0.42f;
-                else if (mergeCount == 3) chance = 0.40f;
-                else if (mergeCount == 4) chance = 0.39f;
-                break;
-
-            case 7:
-                if (mergeCount == 2) chance = 1.0f;
+            case 9:                 //하트 A
+                if (mergeCount == 2) chance = 1f;
                 else if (mergeCount == 3) chance = 0.8f;
                 else if (mergeCount == 4) chance = 0.74f;
                 break;
-
-            case 8:
-                if (mergeCount == 2) chance = 0.4f;
-                else if (mergeCount == 3) chance = 0.38f;
-                else if (mergeCount == 4) chance = 0.35f;
+                 
+            case 10:                  //하트 J
+                if (mergeCount == 2) chance = 0.44f;
+                else if (mergeCount == 3) chance = 0.42f;
+                else if (mergeCount == 4) chance = 0.4f;
                 break;
 
-            case 9:
-                if (mergeCount == 2) chance = 0.25f;
-                else if (mergeCount == 3) chance = 0.23f;
-                else if (mergeCount == 4) chance = 0.2f;
+            case 11:                     //하트 Q
+                if (mergeCount == 2) chance = 0.38f;
+                else if (mergeCount == 3) chance = 0.36f;
+                else if (mergeCount == 4) chance = 0.34f;
                 break;
 
-            case 10:
-                if (mergeCount == 2) chance = 0.19f;
-                else if (mergeCount == 3) chance = 0.19f;
-                else if (mergeCount == 4) chance = 0.17f;
+            case 12:                //하트 K
+                if (mergeCount == 2) chance = 0.32f;
+                else if (mergeCount == 3) chance = 0.3f;
+                else if (mergeCount == 4) chance = 0.29f;
                 break;
 
-            case 11:
-                if (mergeCount == 2) chance = 0.1f;
-                else if (mergeCount == 3) chance = 0.08f;
-                else if (mergeCount == 4) chance = 0.05f;
+            case 13:             //스페이드 A
+                if (mergeCount == 2) chance = 0.28f;
+                else if (mergeCount == 3) chance = 0.26f;
+                else if (mergeCount == 4) chance = 0.24f;
                 break;
 
-            case 12:
-                if (mergeCount == 2) chance = 0.1f;
-                else if (mergeCount == 3) chance = 0.08f;
-                else if (mergeCount == 4) chance = 0.05f;
+            case 14:             //스페이드 J
+                if (mergeCount == 2) chance = 0.2f;
+                else if (mergeCount == 3) chance = 0.15f;
+                else if (mergeCount == 4) chance = 0.12f;
                 break;
 
-            case 13:
+            case 15:             //스페이드 Q
+                if (mergeCount == 2) chance = 0.12f;
+                else if (mergeCount == 3) chance = 0.11f;
+                else if (mergeCount == 4) chance = 0.10f;
+                break;
+
+            case 16:             //스페이드 K
                 if (mergeCount == 2) chance = 0f;
                 else if (mergeCount == 3) chance = 0f;
                 else if (mergeCount == 4) chance = 0f;
