@@ -162,7 +162,7 @@ public class GameManager : MonoBehaviour
 
             // UI 업데이트
             if (stageText != null)
-                stageText.text = "Stage    " + StageManager.Instance.currentStage;
+                stageText.text = "Stage     " + StageManager.Instance.currentStage;
 
             if (targetScoreText != null)
                 targetScoreText.text = "목표: " + currentStageData.targetScore + "점";
