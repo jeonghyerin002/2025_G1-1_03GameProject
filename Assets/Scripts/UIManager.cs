@@ -27,14 +27,21 @@ public class UIManager : MonoBehaviour
         scoreText.text = "Score: " + amount;
     }
 
-  
 
+   
     // Start is called before the first frame update
     public void GameStartButtonAction()
     {
         SceneManager.LoadScene("Dialog_0");
 
     }
+
+    public void GoToMainMenu()
+    {
+        Debug.Log("메인 화면으로 이동!");
+        SceneManager.LoadScene("Level_0"); 
+    }
+
 
     public void OpenOptionsPanel()
     {
