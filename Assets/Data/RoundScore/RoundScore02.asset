@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5db0c308a5649024ca4e6d6124ca5fd3, type: 3}
   m_Name: RoundScore02
   m_EditorClassIdentifier: 
-  score: 20
+  score: 15
   reward: 0
