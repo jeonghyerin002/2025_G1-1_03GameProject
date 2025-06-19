@@ -17321,6 +17321,7 @@ GameObject:
   - component: {fileID: 1931046201}
   - component: {fileID: 1931046200}
   - component: {fileID: 1931046199}
+  - component: {fileID: 1931046202}
   m_Layer: 5
   m_Name: DrowButton
   m_TagString: Untagged
@@ -17403,7 +17404,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 89799f95236e29e43977ae257af14787, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -17429,6 +17430,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1931046197}
   m_CullTransparentMesh: 1
+--- !u!114 &1931046202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931046197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81df25674c2417a4b828794872182ccb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetMaterial: {fileID: 2100000, guid: 89799f95236e29e43977ae257af14787, type: 2}
+  propertyName: _ShadowLight_Intensity_1
+  maxIntensity: 4
+  speed: 1
 --- !u!4 &1990821746 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8771724255288393621, guid: a23b669c4dd7f8d4893961676a0da63a, type: 3}
