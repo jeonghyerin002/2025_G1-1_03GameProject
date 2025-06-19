@@ -458,7 +458,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void OnMergeButtonClicked()
+    public void OnMergeButtonClicked() 
     {
         Debug.Log($"머지 버튼 클릭됨! CanInteract: {CanInteract()}");
 
@@ -483,7 +483,7 @@ public class GameManager : MonoBehaviour
             if (mergeCards[i].GetComponent<Card>().cardValue != value)
             {
                 Debug.Log("같은 숫자의 카드만 머지 할 수 있습니다.");
-                ShowWarningMessage("같은 숫자의 카드만 머지 가능!", Color.yellow);
+                ShowWarningMessage("같은 모양의 카드만 머지 가능!", Color.yellow);
                 SoundManager.Instance.PlayFullWarning();
                 return;
             }

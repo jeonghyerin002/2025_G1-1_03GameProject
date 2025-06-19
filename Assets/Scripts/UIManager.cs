@@ -21,17 +21,62 @@ public class UIManager : MonoBehaviour
     private int currentPage = 0;
 
 
-    private void Start()
+    public GameObject menuPanel;
+    public Button mainMenuButton;
+   
+
+
+    private bool isMenuOpen = false;
+
+    void Start()
     {
+
+        if (SceneManager.GetActiveScene().name != "Level_0")
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         ShowPage(currentPage);
 
         nextButton.onClick.AddListener(NextPage);
         prevButton.onClick.AddListener(PrevPage);
+
+        
+        
     }
 
+    private void Update()
+    {
+       
+    }
+
+    void ToggleMenu()
+    {
+        isMenuOpen = !isMenuOpen;
+        menuPanel.SetActive(isMenuOpen);
+    }
+
+    void CloseMenu()
+    {
+        isMenuOpen = false;
+        menuPanel.SetActive(false);
+    }
+
+    void ReturnToMainMenu()
+    {
+        SceneManager.LoadScene("Level_0");
+    }
 
     void ShowPage(int index)
     {
+
+        if (helpPages == null || helpPages.Length == 0 || prevButton == null || nextButton == null)
+        {
+            Debug.LogWarning("UIManager: UI references are not set. Skipping ShowPage.");
+            return;
+        }
+
         for (int i = 0; i < helpPages.Length; i++)
         {
             helpPages[i].SetActive(i == index);
