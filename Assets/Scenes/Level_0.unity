@@ -2558,7 +2558,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1021409909}
+      - m_Target: {fileID: 168069452}
         m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: GameStartButtonAction
         m_Mode: 1
@@ -4116,7 +4116,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1021409909}
+      - m_Target: {fileID: 168069452}
         m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
         m_MethodName: set_enabled
         m_Mode: 6
