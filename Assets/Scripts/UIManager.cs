@@ -104,8 +104,11 @@ public class UIManager : MonoBehaviour
         SceneManager.LoadScene("Level_0"); 
     }
 
+    public void GameExit()
+    {
+        Application.Quit();
+    }
 
-  
 
     public void OnClickStar()
     {
