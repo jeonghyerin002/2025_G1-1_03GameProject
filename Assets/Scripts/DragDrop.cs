@@ -10,20 +10,18 @@ public class DragDrop : MonoBehaviour
     public Transform startParent;
 
     private GameManager gameManager;
+    private bool isReturning = false; // 복귀 중인지 확인하는 변수
 
-    // Start is called before the first frame update
     void Start()
     {
         startPosition = transform.position;
         startParent = transform.parent;
-
         gameManager = FindObjectOfType<GameManager>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (isDragging)
+        if (isDragging && !isReturning) // 복귀 중이 아닐 때만 드래그
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             mousePos.z = 0;
@@ -33,31 +31,30 @@ public class DragDrop : MonoBehaviour
 
     private void OnMouseDown()
     {
-        SoundManager.Instance.PlayCardPlace();
-        // GameManager 상태 확인
-        if (gameManager != null && !gameManager.CanInteract())
+        // 복귀 중이거나 효과가 진행 중이면 드래그 불가
+        if (isReturning || (gameManager != null && !gameManager.CanInteract()))
         {
-            Debug.Log("연출 중이므로 드래그를 시작할 수 없습니다.");
             return;
         }
 
+        SoundManager.Instance.PlayCardPlace();
         isDragging = true;
-
         startPosition = transform.position;
         startParent = transform.parent;
-
         GetComponent<SpriteRenderer>().sortingOrder = 10;
-
-        Debug.Log("드래그 시작!");
     }
 
     private void OnMouseUp()
     {
+        if (isReturning || !isDragging) // 복귀 중이면 무시
+        {
+            return;
+        }
+
         SoundManager.Instance.PlayCardPlace();
-        // GameManager 상태 재확인
+
         if (gameManager != null && !gameManager.CanInteract())
         {
-            Debug.Log("연출 중이므로 드래그를 완료할 수 없습니다. 원래 위치로 복귀합니다.");
             isDragging = false;
             GetComponent<SpriteRenderer>().sortingOrder = 1;
             ReturnToOriginalPosition();
@@ -69,7 +66,6 @@ public class DragDrop : MonoBehaviour
 
         if (gameManager == null)
         {
-            Debug.LogError("GameManager를 찾을 수 없습니다!");
             ReturnToOriginalPosition();
             return;
         }
@@ -78,8 +74,6 @@ public class DragDrop : MonoBehaviour
 
         if (IsOverArea(gameManager.handArea))
         {
-            Debug.Log("손패 영역으로 이동");
-
             if (wasInMergeArea)
             {
                 // 머지 영역에서 손패로 이동
@@ -106,39 +100,31 @@ public class DragDrop : MonoBehaviour
             }
             else
             {
-                // 손패 내에서 이동
                 gameManager.ArrangeHand();
             }
         }
         else if (IsOverArea(gameManager.mergeArea))
         {
-            // 이미 머지 영역에 있는 카드라면 그냥 정렬만 하고 끝
             if (wasInMergeArea)
             {
-                Debug.Log("같은 머지 영역 내에서 이동 - 정렬만 수행");
                 gameManager.ArrangeMerge();
                 return;
             }
 
-            // 머지 영역이 가득 찼는지 확인 (기존 코드)
             if (gameManager.mergeCount >= gameManager.maxMergeSize)
             {
-                Debug.Log("머지 영역이 가득 찼습니다.");
                 ReturnToOriginalPosition();
             }
             else
             {
-                // GameManager의 MoveCardToMerge 사용 (기존 코드)
                 gameManager.MoveCardToMerge(gameObject);
             }
         }
         else
         {
-            Debug.Log("유효하지 않은 영역입니다. 원래 위치로 복귀합니다.");
             ReturnToOriginalPosition();
         }
 
-        // 머지 버튼 상태 업데이트 (머지 영역에서 이동한 경우에만)
         if (wasInMergeArea && gameManager.mergeButton != null)
         {
             bool canMerge = gameManager.CanInteract() &&
@@ -149,9 +135,15 @@ public class DragDrop : MonoBehaviour
 
     void ReturnToOriginalPosition()
     {
-        // 애니메이션으로 부드럽게 복귀
-        transform.DOMove(startPosition, 0.3f).SetEase(Ease.OutQuad).OnComplete(() => {
+        if (isReturning) return; // 이미 복귀 중이면 무시
+
+        isReturning = true;
+        isDragging = false;
+
+        // DOTween 애니메이션으로 부드럽게 복귀
+        transform.DOMove(startPosition, 0.2f).SetEase(Ease.OutQuad).OnComplete(() => {
             transform.SetParent(startParent);
+            isReturning = false; // 복귀 완료
 
             if (gameManager != null)
             {
@@ -165,16 +157,11 @@ public class DragDrop : MonoBehaviour
                 }
             }
         });
-
-        Debug.Log("원래 위치로 복귀했습니다.");
     }
 
     bool IsOverArea(Transform area)
     {
-        if (area == null)
-        {
-            return false;
-        }
+        if (area == null) return false;
 
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mousePosition.z = 0;
@@ -185,20 +172,16 @@ public class DragDrop : MonoBehaviour
         {
             if (hit.collider != null && hit.collider.transform == area)
             {
-                Debug.Log(area.name + " 영역 감지됨");
                 return true;
             }
         }
-
         return false;
     }
 
-    // 연출 중에 드래그를 강제로 중단하는 함수 (GameManager에서 호출 가능)
     public void ForceStopDrag()
     {
-        if (isDragging)
+        if (isDragging && !isReturning)
         {
-            Debug.Log("연출 시작으로 인해 드래그가 강제 중단됩니다.");
             isDragging = false;
             GetComponent<SpriteRenderer>().sortingOrder = 1;
             ReturnToOriginalPosition();

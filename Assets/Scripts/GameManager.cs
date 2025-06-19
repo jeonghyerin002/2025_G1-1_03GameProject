@@ -657,32 +657,53 @@ public class GameManager : MonoBehaviour
 
     public void ArrangeHand()
     {
-        if (handCount == 0)
-            return;
+        if (handCount == 0) return;
 
         float startX = -(handCount - 1) * cardSpacing / 2;
 
         for (int i = 0; i < handCount; i++)
         {
-            Vector3 newPos = handArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
-            handCards[i].transform.position = newPos;
+            if (handCards[i] != null && handCards[i].activeInHierarchy)
+            {
+                Vector3 targetPos = handArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
+
+                // 드래그 중이거나 효과 진행 중이 아닌 카드만 이동
+                DragDrop dragDrop = handCards[i].GetComponent<DragDrop>();
+                Card cardComp = handCards[i].GetComponent<Card>();
+
+                if (dragDrop != null && !dragDrop.isDragging &&
+                    cardComp != null && !cardComp.IsPlayingEffect())
+                {
+                    handCards[i].transform.position = targetPos;
+                }
+            }
         }
     }
 
     public void ArrangeMerge()
     {
-        if (mergeCount == 0)
-            return;
+        if (mergeCount == 0) return;
 
         float startX = -(mergeCount - 1) * cardSpacing / 2;
 
         for (int i = 0; i < mergeCount; i++)
         {
-            Vector3 newPos = mergeArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
-            mergeCards[i].transform.position = newPos;
+            if (mergeCards[i] != null && mergeCards[i].activeInHierarchy)
+            {
+                Vector3 targetPos = mergeArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
+
+                // 드래그 중이거나 효과 진행 중이 아닌 카드만 이동
+                DragDrop dragDrop = mergeCards[i].GetComponent<DragDrop>();
+                Card cardComp = mergeCards[i].GetComponent<Card>();
+
+                if (dragDrop != null && !dragDrop.isDragging &&
+                    cardComp != null && !cardComp.IsPlayingEffect())
+                {
+                    mergeCards[i].transform.position = targetPos;
+                }
+            }
         }
     }
-
     public void OnDrawButtonClicked()
     {
         SoundManager.Instance.PlayMergeArea();

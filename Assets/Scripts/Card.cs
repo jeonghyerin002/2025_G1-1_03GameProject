@@ -236,13 +236,14 @@ public class Card : MonoBehaviour
 
     IEnumerator MergeSuccessSequence()
     {
+        isPlayingCardEffect = true;
 
-        isPlayingCardEffect = true;       
+        // 드래그 비활성화
+        DragDrop dragDrop = GetComponent<DragDrop>();
+        if (dragDrop != null) dragDrop.enabled = false;
 
-       
         ApplyDisolveEffect(0f);
 
-        // Disolve_Value를 서서히 증가
         float disolveTime = 1f;
         float elapsedTime = 0f;
 
@@ -255,16 +256,16 @@ public class Card : MonoBehaviour
             {
                 currentMaterial.SetFloat("Disolve_Value", disolveValue);
             }
-
             yield return null;
         }
 
-        // 3. 흔들리며 사라지기
         transform.DOShakePosition(0.5f, strength: 20f);
 
-        isPlayingCardEffect = false;
-       
+        // 연출 완료 후 카드 완전히 숨기기
+        yield return new WaitForSeconds(0.5f);
+        gameObject.SetActive(false);
 
+        isPlayingCardEffect = false;
     }
 
     // 머지 실패 시 연출
@@ -283,20 +284,19 @@ public class Card : MonoBehaviour
 
     IEnumerator MergeFailureSequence()
     {
-        Debug.Log("MergeFailureSequence 시작!");
         isPlayingCardEffect = true;
 
-        // 1. 빨간색으로 깜빡임
+        // 드래그 비활성화
+        DragDrop dragDrop = GetComponent<DragDrop>();
+        if (dragDrop != null) dragDrop.enabled = false;
+
         Color originalColor = spriteRenderer.color;
         spriteRenderer.DOColor(Color.red, 0.2f).SetLoops(4, LoopType.Yoyo);
 
         yield return new WaitForSeconds(0.8f);
 
-        // 2. 소멸 효과
-        Debug.Log("소멸 효과 시작!");
         ApplyDisolveEffect(0f);
 
-        // Disolve_Value를 서서히 증가
         float disolveTime = 1f;
         float elapsedTime = 0f;
 
@@ -309,16 +309,18 @@ public class Card : MonoBehaviour
             {
                 currentMaterial.SetFloat("Disolve_Value", disolveValue);
             }
-
             yield return null;
         }
 
-        // 3. 흔들리며 사라지기
         transform.DOShakePosition(0.5f, strength: 20f);
 
+        // 연출 완료 후 카드 완전히 숨기기
+        yield return new WaitForSeconds(0.5f);
+        gameObject.SetActive(false);
+
         isPlayingCardEffect = false;
-        Debug.Log("MergeFailureSequence 완료!");
     }
+
 
     // 삭제 시 연출
     public void PlayDeleteEffect()
@@ -336,14 +338,14 @@ public class Card : MonoBehaviour
 
     IEnumerator DeleteSequence()
     {
-        Debug.Log("DeleteSequence 시작!");
         isPlayingCardEffect = true;
 
-        // 1. 폭발 효과
-        Debug.Log("폭발 효과 시작!");
+        // 드래그 비활성화
+        DragDrop dragDrop = GetComponent<DragDrop>();
+        if (dragDrop != null) dragDrop.enabled = false;
+
         ApplyExplosionEffect(0f);
 
-        // ExplosionValue를 서서히 증가
         float explosionTime = 0.6f;
         float elapsedTime = 0f;
 
@@ -356,16 +358,17 @@ public class Card : MonoBehaviour
             {
                 currentMaterial.SetFloat("ExplosionValue", explosionValue);
             }
-
             yield return null;
         }
 
-        // 2. 위로 날아가며 사라지기 (크기 변경 없음)
         transform.DOMoveY(transform.position.y + 3f, 0.5f);
         spriteRenderer.DOFade(0f, 0.5f);
 
+        // 연출 완료 후 카드 완전히 숨기기
+        yield return new WaitForSeconds(0.5f);
+        gameObject.SetActive(false);
+
         isPlayingCardEffect = false;
-        Debug.Log("DeleteSequence 완료!");
     }
 
     // 호버 효과 (마우스 올릴 때)
