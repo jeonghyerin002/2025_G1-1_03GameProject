@@ -17149,7 +17149,6 @@ MonoBehaviour:
   prevButton: {fileID: 0}
   menuPanel: {fileID: 1167609396}
   mainMenuButton: {fileID: 1976991299}
-  xButton: {fileID: 167429653}
 --- !u!4 &1295438331
 Transform:
   m_ObjectHideFlags: 0

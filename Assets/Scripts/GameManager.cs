@@ -51,6 +51,9 @@ public class GameManager : MonoBehaviour
     // 클리어 연출 상태 변수 추가
     private bool isClearEffectPlaying = false;
 
+    [Header("카드 교체 시스템 - 새로 추가")]
+    private CardSwapSystem cardSwapSystem;
+
     public int[] prefedinedDeck = new int[]
     {
         1,1,1,1,     // A 카드
@@ -149,6 +152,9 @@ public class GameManager : MonoBehaviour
         {
             mergeResultText.gameObject.SetActive(false);
         }
+
+        // 카드 교체 시스템 추가
+        cardSwapSystem = gameObject.AddComponent<CardSwapSystem>();
     }
 
     void InitializeStage()
@@ -667,14 +673,21 @@ public class GameManager : MonoBehaviour
             {
                 Vector3 targetPos = handArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
 
-                // 드래그 중이거나 효과 진행 중이 아닌 카드만 이동
                 DragDrop dragDrop = handCards[i].GetComponent<DragDrop>();
                 Card cardComp = handCards[i].GetComponent<Card>();
 
                 if (dragDrop != null && !dragDrop.isDragging &&
                     cardComp != null && !cardComp.IsPlayingEffect())
                 {
-                    handCards[i].transform.position = targetPos;
+                    // 부드러운 애니메이션 컴포넌트 확인 및 추가
+                    SmoothCardAnimation smoothAnim = handCards[i].GetComponent<SmoothCardAnimation>();
+                    if (smoothAnim == null)
+                    {
+                        smoothAnim = handCards[i].AddComponent<SmoothCardAnimation>();
+                    }
+
+                    // 부드럽게 이동
+                    smoothAnim.MoveToPosition(targetPos);
                 }
             }
         }
@@ -692,14 +705,21 @@ public class GameManager : MonoBehaviour
             {
                 Vector3 targetPos = mergeArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
 
-                // 드래그 중이거나 효과 진행 중이 아닌 카드만 이동
                 DragDrop dragDrop = mergeCards[i].GetComponent<DragDrop>();
                 Card cardComp = mergeCards[i].GetComponent<Card>();
 
                 if (dragDrop != null && !dragDrop.isDragging &&
                     cardComp != null && !cardComp.IsPlayingEffect())
                 {
-                    mergeCards[i].transform.position = targetPos;
+                    // 부드러운 애니메이션 컴포넌트 확인 및 추가
+                    SmoothCardAnimation smoothAnim = mergeCards[i].GetComponent<SmoothCardAnimation>();
+                    if (smoothAnim == null)
+                    {
+                        smoothAnim = mergeCards[i].AddComponent<SmoothCardAnimation>();
+                    }
+
+                    // 부드럽게 이동
+                    smoothAnim.MoveToPosition(targetPos);
                 }
             }
         }
@@ -729,7 +749,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // 카드가 없으면 게임 종료
         if (deckCount <= 0)
         {
             Debug.Log("게임 종료! 카드가 모두 소진되었습니다.");
@@ -737,7 +756,6 @@ public class GameManager : MonoBehaviour
             StartCoroutine(ShowGameEndScreen());
             return;
         }
-
 
         GameObject drawnCard = deckCards[0];
 
@@ -752,6 +770,16 @@ public class GameManager : MonoBehaviour
         handCount++;
 
         drawnCard.transform.SetParent(handArea);
+
+        // 새로 뽑은 카드는 즉시 위치 설정 후 부드럽게 배치
+        SmoothCardAnimation smoothAnim = drawnCard.GetComponent<SmoothCardAnimation>();
+        if (smoothAnim == null)
+        {
+            smoothAnim = drawnCard.AddComponent<SmoothCardAnimation>();
+        }
+
+        // 덱 위치에서 시작
+        smoothAnim.SetPositionInstant(deckArea.position);
 
         ArrangeHand();
     }
@@ -1107,5 +1135,62 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+
     }
+
+    // 스왑할 때 사용하는 빠른 카드 배치
+    public void ArrangeHandForSwap()
+    {
+        if (handCount == 0) return;
+
+        float startX = -(handCount - 1) * cardSpacing / 2;
+
+        for (int i = 0; i < handCount; i++)
+        {
+            if (handCards[i] != null && handCards[i].activeInHierarchy)
+            {
+                Vector3 targetPos = handArea.position + new Vector3(startX + i * cardSpacing, 0, -0.05f);
+
+                DragDrop dragDrop = handCards[i].GetComponent<DragDrop>();
+                Card cardComp = handCards[i].GetComponent<Card>();
+
+                if (dragDrop != null && !dragDrop.isDragging &&
+                    cardComp != null && !cardComp.IsPlayingEffect())
+                {
+                    // 부드러운 애니메이션 컴포넌트 확인 및 추가
+                    SmoothCardAnimation smoothAnim = handCards[i].GetComponent<SmoothCardAnimation>();
+                    if (smoothAnim == null)
+                    {
+                        smoothAnim = handCards[i].AddComponent<SmoothCardAnimation>();
+                    }
+
+                    // 스왑용 빠른 이동 사용!
+                    smoothAnim.SwapToPosition(targetPos);
+                }
+            }
+        }
+    }
+
+    // 카드 위치를 수동으로 바꾸는 함수 (빠른 애니메이션 사용)
+    public void SwapHandCards(int index1, int index2)
+    {
+        if (index1 < 0 || index1 >= handCount || index2 < 0 || index2 >= handCount)
+            return;
+
+        if (handCards[index1] == null || handCards[index2] == null)
+            return;
+
+        // 카드 위치 교체
+        GameObject temp = handCards[index1];
+        handCards[index1] = handCards[index2];
+        handCards[index2] = temp;
+
+        // 빠른 카드 재배치 사용!
+        ArrangeHandForSwap();
+
+        Debug.Log($"카드 {index1}번과 {index2}번 위치 교체!");
+    }
+
+
+
 }

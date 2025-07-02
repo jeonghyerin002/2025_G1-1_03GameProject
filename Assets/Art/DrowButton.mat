@@ -175,7 +175,7 @@ Material:
     - _OperationBlend_Fade_1: 1
     - _OperationBlend_Fade_2: 1
     - _Parallax: 0.02
-    - _ShadowLight_Intensity_1: 2.9029105
+    - _ShadowLight_Intensity_1: 3.956064
     - _ShadowLight_NoSprite_1: 1
     - _ShadowLight_PosX_1: 0
     - _ShadowLight_PosY_1: 0
