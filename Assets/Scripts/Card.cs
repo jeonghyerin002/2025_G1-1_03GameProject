@@ -1,19 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
+ï»¿using System.Collections;
 using UnityEngine;
 using TMPro;
-using static MergeChanceSO;
 using DG.Tweening;
 
 public class Card : MonoBehaviour
 {
-    [Header("Card Data")]
+    [Header("ì¹´ë“œ ë°ì´í„° - ìƒˆë¡œ ì¶”ê°€")]
+    public CardInfoSO cardInfo; // SO ë°ì´í„°
+
+    [Header("ê¸°ì¡´ ë°ì´í„° - í˜¸í™˜ìš©")]
     public int cardValue;
     public Sprite cardImage;
     public TextMeshPro cardText;
-    public MergeChanceSO mergeData;
 
-    [Header("Material Effects (ÀÌÆåÆ® ¿¬Ãâ¿ë)")]
+    [Header("Material Effects (ì´í™íŠ¸ ì—°ì¶œìš©)")]
     public Material originalMaterial;
     public Material burnMaterial;
     public Material disolveMaterial;
@@ -27,7 +27,7 @@ public class Card : MonoBehaviour
     private GameManager gameManager;
     private bool isPlayingCardEffect = false;
 
-    // »õ·Î¿î ºñÁÖ¾ó ½Ã½ºÅÛ (È£¹ö/ÀÌµ¿¿ë)
+    // ìƒˆë¡œìš´ ë¹„ì£¼ì–¼ ì‹œìŠ¤í…œ (í˜¸ë²„/ì´ë™ìš©)
     private SimpleCardVisualEffects visualEffects;
     private CardShaderEffect shaderEffect;
 
@@ -42,14 +42,14 @@ public class Card : MonoBehaviour
 
         gameManager = FindObjectOfType<GameManager>();
 
-        // »õ·Î¿î ºñÁÖ¾ó È¿°ú ÄÄÆ÷³ÍÆ® Ãß°¡
+        // ìƒˆë¡œìš´ ë¹„ì£¼ì–¼ íš¨ê³¼ ì»´í¬ë„ŒíŠ¸ ì¶”ê°€
         visualEffects = GetComponent<SimpleCardVisualEffects>();
         if (visualEffects == null)
         {
             visualEffects = gameObject.AddComponent<SimpleCardVisualEffects>();
         }
 
-        // ¼ÎÀÌ´õ È¿°ú ÄÄÆ÷³ÍÆ® Ãß°¡
+        // ì…°ì´ë” íš¨ê³¼ ì»´í¬ë„ŒíŠ¸ ì¶”ê°€
         shaderEffect = GetComponent<CardShaderEffect>();
         if (shaderEffect == null)
         {
@@ -62,6 +62,17 @@ public class Card : MonoBehaviour
         gameObject.transform.DOPunchRotation(new Vector3(1.05f, 0.05f, 0.05f), 0.5f);
     }
 
+    // SO ê¸°ë°˜ ì´ˆê¸°í™” - ìƒˆë¡œ ì¶”ê°€
+    public void InitCard(CardInfoSO info)
+    {
+        cardInfo = info;
+        cardValue = info.gameValue;
+        cardImage = info.cardSprite;
+
+        // ê¸°ì¡´ ë°©ì‹ìœ¼ë¡œ ì´ˆê¸°í™”
+        InitCard(cardValue, cardImage);
+    }
+
     public void InitCard(int value, Sprite image)
     {
         cardValue = value;
@@ -71,16 +82,56 @@ public class Card : MonoBehaviour
 
         if (cardText != null)
         {
-            cardText.text = cardValue.ToString();
+            // SO ë°ì´í„°ê°€ ìˆìœ¼ë©´ ì¹´ë“œ ì´ë¦„ ì‚¬ìš©, ì—†ìœ¼ë©´ ê¸°ì¡´ ë°©ì‹
+            if (cardInfo != null)
+            {
+                cardText.text = GetCardDisplayName();
+            }
+            else
+            {
+                cardText.text = cardValue.ToString();
+            }
         }
 
-        // Ä«µå °ª¿¡ µû¸¥ ±âº» È¿°ú
         ApplyValueBasedEffect();
 
-        // ¼ÎÀÌ´õ È¿°ú ÃÊ±âÈ­
         if (shaderEffect != null)
         {
             shaderEffect.SetEditionByCardValue();
+        }
+    }
+
+    string GetCardDisplayName()
+    {
+        if (cardInfo == null) return cardValue.ToString();
+
+        string suitSymbol = GetSuitSymbol();
+        string numberText = GetNumberText();
+
+        return suitSymbol + numberText;
+    }
+
+    string GetSuitSymbol()
+    {
+        switch (cardInfo.suit)
+        {
+            case CardSuit.Spade: return "â™ ";
+            case CardSuit.Heart: return "â™¥";
+            case CardSuit.Diamond: return "â™¦";
+            case CardSuit.Club: return "â™£";
+            default: return "";
+        }
+    }
+
+    string GetNumberText()
+    {
+        switch (cardInfo.number)
+        {
+            case 1: return "A";
+            case 11: return "J";
+            case 12: return "Q";
+            case 13: return "K";
+            default: return cardInfo.number.ToString();
         }
     }
 
@@ -88,12 +139,12 @@ public class Card : MonoBehaviour
     {
         if (cardValue >= 10)
         {
-            // ÀÌÁ¦ È£¹ö ½Ã¿¡¸¸ shiny È¿°ú Àû¿ë
-            // Æò»ó½Ã¿¡´Â »õ·Î¿î ¼ÎÀÌ´õ ½Ã½ºÅÛ »ç¿ë
+            // ì´ì œ í˜¸ë²„ ì‹œì—ë§Œ shiny íš¨ê³¼ ì ìš©
+            // í‰ìƒì‹œì—ëŠ” ìƒˆë¡œìš´ ì…°ì´ë” ì‹œìŠ¤í…œ ì‚¬ìš©
         }
     }
 
-    #region ±âÁ¸ ¸ÓÆ¼¸®¾ó ÀÌÆåÆ® (¿¬Ãâ¿ë À¯Áö)
+    #region ê¸°ì¡´ ë¨¸í‹°ë¦¬ì–¼ ì´í™íŠ¸ (ì—°ì¶œìš© ìœ ì§€)
 
     public void ApplyShinyEffect()
     {
@@ -153,7 +204,7 @@ public class Card : MonoBehaviour
             spriteRenderer.material = originalMaterial;
             currentMaterial = originalMaterial;
 
-            // ¼ÎÀÌ´õ È¿°úµµ ¿ø·¡´ë·Î º¹¿ø
+            // ì…°ì´ë” íš¨ê³¼ë„ ì›ë˜ëŒ€ë¡œ ë³µì›
             if (shaderEffect != null)
             {
                 shaderEffect.SetEditionByCardValue();
@@ -163,7 +214,7 @@ public class Card : MonoBehaviour
 
     #endregion
 
-    #region ±âÁ¸ ÀÌÆåÆ® ¿¬Ãâ ½ÃÄö½º (±×´ë·Î À¯Áö)
+    #region ê¸°ì¡´ ì´í™íŠ¸ ì—°ì¶œ ì‹œí€€ìŠ¤ (ê·¸ëŒ€ë¡œ ìœ ì§€)
 
     public void PlayMergeSuccessEffect()
     {
@@ -175,7 +226,7 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
-        // »õ·Î¿î ºñÁÖ¾ó È¿°ú Àá½Ã ºñÈ°¼ºÈ­
+        // ìƒˆë¡œìš´ ë¹„ì£¼ì–¼ íš¨ê³¼ ì ì‹œ ë¹„í™œì„±í™”
         if (visualEffects != null)
             visualEffects.enabled = false;
         if (shaderEffect != null)
@@ -219,7 +270,7 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
-        // »õ·Î¿î ºñÁÖ¾ó È¿°ú Àá½Ã ºñÈ°¼ºÈ­
+        // ìƒˆë¡œìš´ ë¹„ì£¼ì–¼ íš¨ê³¼ ì ì‹œ ë¹„í™œì„±í™”
         if (visualEffects != null)
             visualEffects.enabled = false;
         if (shaderEffect != null)
@@ -268,7 +319,7 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
-        // »õ·Î¿î ºñÁÖ¾ó È¿°ú Àá½Ã ºñÈ°¼ºÈ­
+        // ìƒˆë¡œìš´ ë¹„ì£¼ì–¼ íš¨ê³¼ ì ì‹œ ë¹„í™œì„±í™”
         if (visualEffects != null)
             visualEffects.enabled = false;
         if (shaderEffect != null)
@@ -305,47 +356,26 @@ public class Card : MonoBehaviour
 
     #endregion
 
-    #region »õ·Î¿î È£¹ö/ÀÌµ¿ ½Ã½ºÅÛ
+    #region ìƒˆë¡œìš´ í˜¸ë²„/ì´ë™ ì‹œìŠ¤í…œ
 
     public void PlayHoverEffect()
     {
-        if (isPlayingCardEffect ||
-            (gameManager != null && !gameManager.CanInteract()))
-        {
-            return;
-        }
+        if (isPlayingCardEffect) return;
 
-        // ±âÁ¸ shiny È¿°ú ´ë½Å »õ·Î¿î ºñÁÖ¾ó È¿°ú »ç¿ë
         if (visualEffects != null)
         {
             visualEffects.PlayHoverEffect();
         }
-
-        // ¼ÎÀÌ´õ È¿°ú·Î ºû³ª´Â È¿°ú (¼±ÅÃ»çÇ×)
-        // if (shaderEffect != null)
-        // {
-        //     shaderEffect.SetEdition("POLYCHROME");
-        // }
     }
 
     public void StopHoverEffect()
     {
-        if (isPlayingCardEffect)
-        {
-            return;
-        }
+        if (isPlayingCardEffect) return;
 
-        // »õ·Î¿î ºñÁÖ¾ó È¿°ú Á¤Áö
         if (visualEffects != null)
         {
             visualEffects.StopHoverEffect();
         }
-
-        // ¿ø·¡ ¼ÎÀÌ´õ·Î º¹¿ø (¼±ÅÃ»çÇ×)
-        // if (shaderEffect != null)
-        // {
-        //     shaderEffect.SetEditionByCardValue();
-        // }
     }
 
     public void PlaySwapEffect(float direction = 1f)
@@ -358,7 +388,7 @@ public class Card : MonoBehaviour
 
     #endregion
 
-    #region ¸¶¿ì½º ÀÌº¥Æ®
+    #region ë§ˆìš°ìŠ¤ ì´ë²¤íŠ¸
 
     void OnMouseEnter()
     {

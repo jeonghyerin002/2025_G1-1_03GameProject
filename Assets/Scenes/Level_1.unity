@@ -17787,6 +17787,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67e9cc4f08908dc4aaa4f69f945a61e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cardDatabase: []
+  mergeRules: []
+  useSOSystem: 0
   cardPrefab: {fileID: 7716779071114330809, guid: 6721091b5a5ab5841bc0ab750044b700, type: 3}
   cardImages:
   - {fileID: 21300000, guid: 601e86709a808f347916116e1dbd066d, type: 3}

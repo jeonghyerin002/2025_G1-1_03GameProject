@@ -9,6 +9,12 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("SO 데이터 - 새로 추가")]
+    public CardInfoSO[] cardDatabase;       // 모든 카드 정보
+    public MergeRuleSO[] mergeRules;        // 합성 규칙들
+    public bool useSOSystem = true;         // SO 시스템 사용 여부
+
+    [Header("기존 데이터 - 호환용")]
     public GameObject cardPrefab;
     public Sprite[] cardImages;
 
@@ -50,6 +56,8 @@ public class GameManager : MonoBehaviour
 
     // 클리어 연출 상태 변수 추가
     private bool isClearEffectPlaying = false;
+
+    private List<GameObject> cardsToDelete = new List<GameObject>(); // 삭제할 카드들 저장
 
     [Header("카드 교체 시스템 - 새로 추가")]
     private CardSwapSystem cardSwapSystem;
@@ -464,88 +472,193 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void OnMergeButtonClicked() 
+    public void OnMergeButtonClicked()
     {
-        Debug.Log($"머지 버튼 클릭됨! CanInteract: {CanInteract()}");
+        if (!CanInteract()) return;
 
-        // 상호작용 불가능한 상태면 무시
-        if (!CanInteract())
-        {
-            Debug.Log("연출 중이므로 머지 버튼 무시됨");
-            return;
-        }
-
-        // 카드 값이 같은지 먼저 확인
         if (mergeCount < 2)
         {
-            Debug.Log("머지하려면 최소 2장의 카드가 필요합니다.");
-            SoundManager.Instance.PlayFullWarning();
+            Debug.Log("최소 2장의 카드가 필요합니다.");
             return;
         }
 
-        int value = mergeCards[0].GetComponent<Card>().cardValue;
-        for (int i = 1; i < mergeCount; i++)
+        // 삭제할 카드들을 미리 저장!
+        cardsToDelete.Clear();
+        for (int i = 0; i < mergeCount; i++)
         {
-            if (mergeCards[i].GetComponent<Card>().cardValue != value)
+            if (mergeCards[i] != null)
             {
-                Debug.Log("같은 숫자의 카드만 머지 할 수 있습니다.");
-                ShowWarningMessage("같은 모양의 카드만 머지 가능!", Color.yellow);
-                SoundManager.Instance.PlayFullWarning();
-                return;
+                cardsToDelete.Add(mergeCards[i]);
             }
+        }
+
+        // SO 시스템 사용할 때
+        if (useSOSystem && mergeRules != null)
+        {
+            ProcessMergeWithSO();
+        }
+        else
+        {
+            // 기존 방식
+            ProcessMergeOldWay();
+        }
+    }
+
+    void ProcessMergeWithSO()
+    {
+        // 선택된 카드들의 SO 정보 수집
+        List<CardInfoSO> selectedCardInfos = new List<CardInfoSO>();
+
+        for (int i = 0; i < mergeCount; i++)
+        {
+            Card card = mergeCards[i].GetComponent<Card>();
+            if (card != null && card.cardInfo != null)
+            {
+                selectedCardInfos.Add(card.cardInfo);
+            }
+        }
+
+        // 합성 규칙 체크
+        MergeRuleSO validRule = CheckMergeRules(selectedCardInfos);
+
+        if (validRule == null)
+        {
+            ShowWarningMessage("합성할 수 없는 조합입니다!", Color.red);
+            return;
+        }
+
+        // 확률 계산
+        float successRate = GetSuccessRate(validRule, mergeCount);
+        bool success = Random.value <= successRate;
+
+        if (success)
+        {
+            // 성공
+            score += validRule.scoreReward;
+            StartCoroutine(ShowMergeSuccess(validRule.newCardValue, validRule.scoreReward));
+
+            // 기존 성공 효과 적용
+            ApplyMergeSuccessEffects();
+            StartCoroutine(DelayedMergeCards());
+        }
+        else
+        {
+            // 실패
+            ApplyMergeFailureEffects();
+            StartCoroutine(ShowMergeFailure());
+            StartCoroutine(DelayedDeleteMergeCards());
+        }
+    }
+
+    MergeRuleSO CheckMergeRules(List<CardInfoSO> cards)
+    {
+        foreach (MergeRuleSO rule in mergeRules)
+        {
+            if (!rule.isActive) continue;
+
+            if (cards.Count < rule.minCards || cards.Count > rule.maxCards)
+                continue;
+
+            if (CheckRuleCondition(cards, rule))
+                return rule;
+        }
+        return null;
+    }
+
+    bool CheckRuleCondition(List<CardInfoSO> cards, MergeRuleSO rule)
+    {
+        switch (rule.ruleType)
+        {
+            case RuleType.SameNumber:
+                return CheckSameNumber(cards);
+
+            case RuleType.SameSuit:
+                return CheckSameSuit(cards);
+
+            case RuleType.Pair:
+                return cards.Count == 2 && CheckSameNumber(cards);
+
+            case RuleType.Triple:
+                return cards.Count == 3 && CheckSameNumber(cards);
+
+            default:
+                return false;
+        }
+    }
+
+    bool CheckSameNumber(List<CardInfoSO> cards)
+    {
+        int firstNumber = cards[0].number;
+        foreach (CardInfoSO card in cards)
+        {
+            if (card.number != firstNumber)
+                return false;
+        }
+        return true;
+    }
+
+    bool CheckSameSuit(List<CardInfoSO> cards)
+    {
+        CardSuit firstSuit = cards[0].suit;
+        foreach (CardInfoSO card in cards)
+        {
+            if (card.suit != firstSuit)
+                return false;
+        }
+        return true;
+    }
+
+    float GetSuccessRate(MergeRuleSO rule, int cardCount)
+    {
+        int index = cardCount - rule.minCards;
+        if (index >= 0 && index < rule.successRates.Length)
+            return rule.successRates[index];
+        return 0f;
+    }
+
+    void ProcessMergeOldWay()
+    {
+        // 기존 합성 로직 유지
+        if (mergeCount != 2 && mergeCount != 3 && mergeCount != 4)
+        {
+            Debug.Log("2-4장의 카드가 필요합니다.");
+            return;
         }
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
 
-        if (firstCard == 16)
+        // 같은 값 체크
+        for (int i = 1; i < mergeCount; i++)
         {
-            ShowWarningMessage("더 이상 합성 할 수 없습니다.", Color.red);
-            Debug.Log("16번 카드이므로 합성 불가");
-            SoundManager.Instance.PlayFullWarning();
-            return;
+            if (mergeCards[i].GetComponent<Card>().cardValue != firstCard)
+            {
+                ShowWarningMessage("같은 숫자의 카드만 합성 가능!", Color.yellow);
+                return;
+            }
         }
 
-        // 연출 시작
-        Debug.Log("연출 시작! 버튼들 비활성화");
-        isPlayingEffect = true;
-        SetButtonsInteractable(false);
-
-        float GoodChance = Random.value;
+        // 기존 확률 계산
         LuckyChance();
+        bool success = Random.value <= chance;
 
-        Debug.Log($"확률: {chance}, 랜덤값: {GoodChance}");
-
-        if (GoodChance <= chance)
+        if (success)
         {
-            // 성공!
             int newValue = firstCard + 1;
             int scoreToAdd = newValue * 1;
 
-            // 셰이더 효과 먼저 적용
             ApplyMergeSuccessEffects();
-
             StartCoroutine(ShowMergeSuccess(newValue, scoreToAdd));
-
-            // 잠시 후 실제 머지 처리 (수정됨으로)
             StartCoroutine(DelayedMergeCards());
-
-            SoundManager.Instance.PlayMergeSuccess();
-            Debug.Log("성공 했습니다!!!!!!!!!!!!!!");
         }
         else
         {
-            // 실패!
-            // 셰이더 효과 먼저 적용
             ApplyMergeFailureEffects();
-
-            Debug.Log("실패했습니다!!!!!!!!!!!!");
-            SoundManager.Instance.PlayMergeFail();
             StartCoroutine(ShowMergeFailure());
-
-            // 잠시 후 카드 삭제 (수정됨으로)
             StartCoroutine(DelayedDeleteMergeCards());
         }
     }
+
+
 
     // 지연된 머지 처리 (연출 후) - 수정됨으로 복구
     IEnumerator DelayedMergeCards()
@@ -568,20 +681,65 @@ public class GameManager : MonoBehaviour
     // 지연된 카드 삭제 (연출 후) - 수정됨으로 복구  
     IEnumerator DelayedDeleteMergeCards()
     {
-        Debug.Log("DelayedDeleteMergeCards 시작");
-
-        // 머지 효과 완료까지 대기
-        yield return new WaitUntil(() => !isMergeEffectPlaying);
-
-        yield return new WaitForSeconds(1.2f); // 연출 시간 대기
-
-        Debug.Log("실제 DeleteMergeCards 호출");
-        DeleteMergeCards();
-
-        // 연출 종료 후 버튼 복구
-        Debug.Log("삭제 완료 - 버튼 복구");
-        RestoreButtonsAfterEffect();
+        yield return new WaitForSeconds(1f);
+        DeleteStoredCards(); // 저장된 카드들만 삭제
     }
+
+    void DeleteStoredCards()
+    {
+        Debug.Log($"저장된 카드 {cardsToDelete.Count}개 삭제 시작");
+
+        // 저장된 카드들만 삭제
+        foreach (GameObject card in cardsToDelete)
+        {
+            if (card != null)
+            {
+                // mergeCards 배열에서도 제거
+                for (int i = 0; i < mergeCount; i++)
+                {
+                    if (mergeCards[i] == card)
+                    {
+                        mergeCards[i] = null;
+                    }
+                }
+
+                Destroy(card);
+            }
+        }
+
+        // 배열 정리
+        CompactMergeArray();
+
+        cardsToDelete.Clear();
+        Debug.Log("카드 삭제 완료");
+    }
+
+    // 배열 정리 메서드
+    void CompactMergeArray()
+    {
+        int writeIndex = 0;
+
+        // null이 아닌 카드들을 앞쪽으로 이동
+        for (int i = 0; i < mergeCount; i++)
+        {
+            if (mergeCards[i] != null)
+            {
+                mergeCards[writeIndex] = mergeCards[i];
+                writeIndex++;
+            }
+        }
+
+        // 나머지 슬롯은 null로 초기화
+        for (int i = writeIndex; i < mergeCards.Length; i++)
+        {
+            mergeCards[i] = null;
+        }
+
+        mergeCount = writeIndex;
+        UpdateMergeButtonState();
+        ArrangeMerge();
+    }
+
 
     // 버튼 상태 관리 함수
     void SetButtonsInteractable(bool interactable)
@@ -642,11 +800,6 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < prefedinedDeck.Length; i++)
         {
             int value = prefedinedDeck[i];
-            int imageIndex = value - 1;
-            if (imageIndex >= cardImages.Length || imageIndex < 0)
-            {
-                imageIndex = 0;
-            }
 
             GameObject newCardObj = Instantiate(cardPrefab, deckArea.position, Quaternion.identity);
             newCardObj.transform.SetParent(deckArea);
@@ -655,7 +808,25 @@ public class GameManager : MonoBehaviour
             Card cardComp = newCardObj.GetComponent<Card>();
             if (cardComp != null)
             {
-                cardComp.InitCard(value, cardImages[imageIndex]);
+                if (useSOSystem && cardDatabase != null)
+                {
+                    // SO 시스템 사용
+                    CardInfoSO cardInfo = GetCardInfoByValue(value);
+                    if (cardInfo != null)
+                    {
+                        cardComp.InitCard(cardInfo);
+                    }
+                    else
+                    {
+                        // SO 없으면 기존 방식
+                        InitCardOldWay(cardComp, value);
+                    }
+                }
+                else
+                {
+                    // 기존 방식
+                    InitCardOldWay(cardComp, value);
+                }
             }
             deckCards[i] = newCardObj;
         }
@@ -1189,6 +1360,25 @@ public class GameManager : MonoBehaviour
         ArrangeHandForSwap();
 
         Debug.Log($"카드 {index1}번과 {index2}번 위치 교체!");
+    }
+
+    void InitCardOldWay(Card cardComp, int value)
+    {
+        int imageIndex = value - 1;
+        if (imageIndex >= cardImages.Length || imageIndex < 0)
+            imageIndex = 0;
+
+        cardComp.InitCard(value, cardImages[imageIndex]);
+    }
+
+    CardInfoSO GetCardInfoByValue(int value)
+    {
+        foreach (CardInfoSO card in cardDatabase)
+        {
+            if (card.gameValue == value)
+                return card;
+        }
+        return null;
     }
 
 
