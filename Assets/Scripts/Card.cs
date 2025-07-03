@@ -14,19 +14,20 @@ public class Card : MonoBehaviour
 
     [Header("Material Effects")]
     public Material originalMaterial;
-    public Material burnMaterial;        // BurnPixel 쉐이더
-    public Material disolveMaterial;     // DisolvePixel 쉐이더  
-    public Material explosionMaterial;   // PixelExplosion 쉐이더
-    public Material shinyMaterial;       // ShinyPixel 쉐이더
-    public Material fireMaterial;        // TurnFirePixel 쉐이더
-    public Material pixelMaterial;       // Pixelisation 쉐이더
+    public Material burnMaterial;
+    public Material disolveMaterial;
+    public Material explosionMaterial;
+    public Material shinyMaterial;
+    public Material fireMaterial;
+    public Material pixelMaterial;
 
     private SpriteRenderer spriteRenderer;
     private Material currentMaterial;
     private GameManager gameManager;
-
-    // 카드별 연출 상태 관리
     private bool isPlayingCardEffect = false;
+
+    // 새로 추가된 비주얼 효과 컴포넌트
+    private SimpleCardVisualEffects visualEffects;
 
     void Awake()
     {
@@ -37,19 +38,19 @@ public class Card : MonoBehaviour
             currentMaterial = originalMaterial;
         }
 
-        // GameManager 참조 획득
         gameManager = FindObjectOfType<GameManager>();
+
+        // 비주얼 효과 컴포넌트 추가
+        visualEffects = GetComponent<SimpleCardVisualEffects>();
+        if (visualEffects == null)
+        {
+            visualEffects = gameObject.AddComponent<SimpleCardVisualEffects>();
+        }
     }
 
     public void OnEnable()
     {
-        // 크기 변경 제거! 회전만 남김
         gameObject.transform.DOPunchRotation(new Vector3(1.05f, 0.05f, 0.05f), 0.5f);
-    }
-
-    public void MergeData() //데이터를 가져온다
-    {
-
     }
 
     public void InitCard(int value, Sprite image)
@@ -64,22 +65,19 @@ public class Card : MonoBehaviour
             cardText.text = cardValue.ToString();
         }
 
-        // 카드 값에 따라 기본 효과 적용
         ApplyValueBasedEffect();
     }
 
-    // 카드 값에 따른 기본 효과
     void ApplyValueBasedEffect()
     {
-        if (cardValue >= 10) // 높은 값 카드는 반짝이는 효과
+        if (cardValue >= 10)
         {
             ApplyShinyEffect();
         }
     }
 
-    #region 쉐이더 효과 함수들
+    #region 셰이더 효과 함수들 (기존과 동일)
 
-    // 반짝이는 효과 (높은 값 카드용)
     public void ApplyShinyEffect()
     {
         Debug.Log($"ApplyShinyEffect 호출됨!");
@@ -96,117 +94,48 @@ public class Card : MonoBehaviour
         }
     }
 
-    // 불타는 효과 (머지 성공용)
     public void ApplyBurnEffect(float burnValue = 0.5f)
     {
-        Debug.Log($"ApplyBurnEffect 호출됨! burnValue: {burnValue}");
-
         if (burnMaterial != null && spriteRenderer != null)
         {
-            Debug.Log("BurnMaterial 적용 중...");
             spriteRenderer.material = burnMaterial;
-            currentMaterial = spriteRenderer.material; // 인스턴스로 가져오기
+            currentMaterial = spriteRenderer.material;
 
-            // Burn_Value 파라미터 조절
             if (currentMaterial.HasProperty("Burn_Value"))
             {
                 currentMaterial.SetFloat("Burn_Value", burnValue);
-                Debug.Log($"Burn_Value 설정됨: {burnValue}");
             }
-            else
-            {
-                Debug.LogWarning("Burn_Value 프로퍼티를 찾을 수 없습니다!");
-            }
-        }
-        else
-        {
-            Debug.LogError($"BurnMaterial이 null입니다: {burnMaterial == null}, SpriteRenderer가 null입니다: {spriteRenderer == null}");
         }
     }
 
-    // 소멸 효과 (머지 실패용)
     public void ApplyDisolveEffect(float disolveValue = 0.5f)
     {
-        Debug.Log($"ApplyDisolveEffect 호출됨! disolveValue: {disolveValue}");
-
         if (disolveMaterial != null && spriteRenderer != null)
         {
-            Debug.Log("DisolveMaterial 적용 중...");
             spriteRenderer.material = disolveMaterial;
-            currentMaterial = spriteRenderer.material; // 인스턴스로 가져오기
+            currentMaterial = spriteRenderer.material;
 
-            // Disolve_Value 파라미터 조절
             if (currentMaterial.HasProperty("Disolve_Value"))
             {
                 currentMaterial.SetFloat("Disolve_Value", disolveValue);
-                Debug.Log($"Disolve_Value 설정됨: {disolveValue}");
             }
-            else
-            {
-                Debug.LogWarning("Disolve_Value 프로퍼티를 찾을 수 없습니다!");
-            }
-        }
-        else
-        {
-            Debug.LogError($"DisolveMaterial이 null입니다: {disolveMaterial == null}, SpriteRenderer가 null입니다: {spriteRenderer == null}");
         }
     }
 
-    // 폭발 효과 (삭제용)
     public void ApplyExplosionEffect(float explosionValue = 1f)
     {
-        Debug.Log($"ApplyExplosionEffect 호출됨! explosionValue: {explosionValue}");
-
         if (explosionMaterial != null && spriteRenderer != null)
         {
-            Debug.Log("ExplosionMaterial 적용 중...");
             spriteRenderer.material = explosionMaterial;
-            currentMaterial = spriteRenderer.material; // 인스턴스로 가져오기
+            currentMaterial = spriteRenderer.material;
 
-            // ExplosionValue 파라미터 조절
             if (currentMaterial.HasProperty("ExplosionValue"))
             {
                 currentMaterial.SetFloat("ExplosionValue", explosionValue);
-                Debug.Log($"ExplosionValue 설정됨: {explosionValue}");
-            }
-            else
-            {
-                Debug.LogWarning("ExplosionValue 프로퍼티를 찾을 수 없습니다!");
-            }
-        }
-        else
-        {
-            Debug.LogError($"ExplosionMaterial이 null입니다: {explosionMaterial == null}, SpriteRenderer가 null입니다: {spriteRenderer == null}");
-        }
-    }
-
-    // 불 효과 (특수 카드용)
-    public void ApplyFireEffect()
-    {
-        if (fireMaterial != null && spriteRenderer != null)
-        {
-            spriteRenderer.material = fireMaterial;
-            currentMaterial = fireMaterial;
-        }
-    }
-
-    // 픽셀화 효과 (레트로 느낌)
-    public void ApplyPixelEffect(float pixelSize = 32f)
-    {
-        if (pixelMaterial != null && spriteRenderer != null)
-        {
-            spriteRenderer.material = pixelMaterial;
-            currentMaterial = pixelMaterial;
-
-            // PixelUV_Size_1 파라미터 조절
-            if (currentMaterial.HasProperty("PixelUV_Size_1"))
-            {
-                currentMaterial.SetFloat("PixelUV_Size_1", pixelSize);
             }
         }
     }
 
-    // 원래 상태로 복구
     public void RestoreOriginalMaterial()
     {
         if (originalMaterial != null && spriteRenderer != null)
@@ -218,19 +147,11 @@ public class Card : MonoBehaviour
 
     #endregion
 
-    #region 애니메이션과 함께하는 쉐이더 효과
+    #region 기존 애니메이션과 함께하는 셰이더 효과 (기존과 동일)
 
-    // 머지 성공 시 연출
     public void PlayMergeSuccessEffect()
     {
-        Debug.Log("PlayMergeSuccessEffect 호출됨!");
-
-        if (isPlayingCardEffect)
-        {
-            Debug.Log("이미 카드 효과가 재생 중입니다.");
-            return;
-        }
-
+        if (isPlayingCardEffect) return;
         StartCoroutine(MergeSuccessSequence());
     }
 
@@ -238,7 +159,6 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
-        // 드래그 비활성화
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null) dragDrop.enabled = false;
 
@@ -261,24 +181,15 @@ public class Card : MonoBehaviour
 
         transform.DOShakePosition(0.5f, strength: 20f);
 
-        // 연출 완료 후 카드 완전히 숨기기
         yield return new WaitForSeconds(0.5f);
         gameObject.SetActive(false);
 
         isPlayingCardEffect = false;
     }
 
-    // 머지 실패 시 연출
     public void PlayMergeFailureEffect()
     {
-        Debug.Log("PlayMergeFailureEffect 호출됨!");
-
-        if (isPlayingCardEffect)
-        {
-            Debug.Log("이미 카드 효과가 재생 중입니다.");
-            return;
-        }
-
+        if (isPlayingCardEffect) return;
         StartCoroutine(MergeFailureSequence());
     }
 
@@ -286,7 +197,6 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
-        // 드래그 비활성화
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null) dragDrop.enabled = false;
 
@@ -314,25 +224,15 @@ public class Card : MonoBehaviour
 
         transform.DOShakePosition(0.5f, strength: 20f);
 
-        // 연출 완료 후 카드 완전히 숨기기
         yield return new WaitForSeconds(0.5f);
         gameObject.SetActive(false);
 
         isPlayingCardEffect = false;
     }
 
-
-    // 삭제 시 연출
     public void PlayDeleteEffect()
     {
-        Debug.Log("PlayDeleteEffect 호출됨!");
-
-        if (isPlayingCardEffect)
-        {
-            Debug.Log("이미 카드 효과가 재생 중입니다.");
-            return;
-        }
-
+        if (isPlayingCardEffect) return;
         StartCoroutine(DeleteSequence());
     }
 
@@ -340,7 +240,6 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
-        // 드래그 비활성화
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null) dragDrop.enabled = false;
 
@@ -364,17 +263,15 @@ public class Card : MonoBehaviour
         transform.DOMoveY(transform.position.y + 3f, 0.5f);
         spriteRenderer.DOFade(0f, 0.5f);
 
-        // 연출 완료 후 카드 완전히 숨기기
         yield return new WaitForSeconds(0.5f);
         gameObject.SetActive(false);
 
         isPlayingCardEffect = false;
     }
 
-    // 호버 효과 (마우스 올릴 때)
+    // 호버 효과 (새로운 비주얼 효과 추가)
     public void PlayHoverEffect()
     {
-        // 연출 중이거나 게임 상호작용이 불가능할 때는 호버 효과 없음
         if (isPlayingCardEffect ||
             (gameManager != null && !gameManager.CanInteract()))
         {
@@ -382,27 +279,46 @@ public class Card : MonoBehaviour
         }
 
         ApplyShinyEffect();
+
+        // 새로운 비주얼 효과 추가
+        if (visualEffects != null)
+        {
+            visualEffects.PlayHoverEffect();
+        }
     }
 
-    // 호버 해제
+    // 호버 해제 (새로운 비주얼 효과 추가)
     public void StopHoverEffect()
     {
-        // 연출 중일 때는 호버 해제하지 않음
         if (isPlayingCardEffect)
         {
             return;
         }
 
         RestoreOriginalMaterial();
+
+        // 새로운 비주얼 효과 추가
+        if (visualEffects != null)
+        {
+            visualEffects.StopHoverEffect();
+        }
+    }
+
+    // 스왑 효과 추가
+    public void PlaySwapEffect(float direction = 1f)
+    {
+        if (visualEffects != null)
+        {
+            visualEffects.PlaySwapEffect(direction);
+        }
     }
 
     #endregion
 
-    #region 마우스 이벤트
+    #region 마우스 이벤트 (기존과 동일)
 
     void OnMouseEnter()
     {
-        // 드래그 중이 아닐 때만 호버 효과 적용
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null && !dragDrop.isDragging)
         {
@@ -412,7 +328,6 @@ public class Card : MonoBehaviour
 
     void OnMouseExit()
     {
-        // 드래그 중이 아닐 때만 호버 해제
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null && !dragDrop.isDragging)
         {
@@ -422,7 +337,6 @@ public class Card : MonoBehaviour
 
     #endregion
 
-    // 외부에서 카드 효과 상태 확인용
     public bool IsPlayingEffect()
     {
         return isPlayingCardEffect;
