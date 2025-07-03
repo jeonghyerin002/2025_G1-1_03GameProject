@@ -7,12 +7,13 @@ using DG.Tweening;
 
 public class Card : MonoBehaviour
 {
+    [Header("Card Data")]
     public int cardValue;
     public Sprite cardImage;
     public TextMeshPro cardText;
     public MergeChanceSO mergeData;
 
-    [Header("Material Effects")]
+    [Header("Material Effects (이펙트 연출용)")]
     public Material originalMaterial;
     public Material burnMaterial;
     public Material disolveMaterial;
@@ -26,8 +27,9 @@ public class Card : MonoBehaviour
     private GameManager gameManager;
     private bool isPlayingCardEffect = false;
 
-    // 새로 추가된 비주얼 효과 컴포넌트
+    // 새로운 비주얼 시스템 (호버/이동용)
     private SimpleCardVisualEffects visualEffects;
+    private CardShaderEffect shaderEffect;
 
     void Awake()
     {
@@ -40,11 +42,18 @@ public class Card : MonoBehaviour
 
         gameManager = FindObjectOfType<GameManager>();
 
-        // 비주얼 효과 컴포넌트 추가
+        // 새로운 비주얼 효과 컴포넌트 추가
         visualEffects = GetComponent<SimpleCardVisualEffects>();
         if (visualEffects == null)
         {
             visualEffects = gameObject.AddComponent<SimpleCardVisualEffects>();
+        }
+
+        // 셰이더 효과 컴포넌트 추가
+        shaderEffect = GetComponent<CardShaderEffect>();
+        if (shaderEffect == null)
+        {
+            shaderEffect = gameObject.AddComponent<CardShaderEffect>();
         }
     }
 
@@ -65,32 +74,33 @@ public class Card : MonoBehaviour
             cardText.text = cardValue.ToString();
         }
 
+        // 카드 값에 따른 기본 효과
         ApplyValueBasedEffect();
+
+        // 셰이더 효과 초기화
+        if (shaderEffect != null)
+        {
+            shaderEffect.SetEditionByCardValue();
+        }
     }
 
     void ApplyValueBasedEffect()
     {
         if (cardValue >= 10)
         {
-            ApplyShinyEffect();
+            // 이제 호버 시에만 shiny 효과 적용
+            // 평상시에는 새로운 셰이더 시스템 사용
         }
     }
 
-    #region 셰이더 효과 함수들 (기존과 동일)
+    #region 기존 머티리얼 이펙트 (연출용 유지)
 
     public void ApplyShinyEffect()
     {
-        Debug.Log($"ApplyShinyEffect 호출됨!");
-
         if (shinyMaterial != null && spriteRenderer != null)
         {
-            Debug.Log("ShinyMaterial 적용 중...");
             spriteRenderer.material = shinyMaterial;
             currentMaterial = shinyMaterial;
-        }
-        else
-        {
-            Debug.LogError($"ShinyMaterial이 null입니다: {shinyMaterial == null}, SpriteRenderer가 null입니다: {spriteRenderer == null}");
         }
     }
 
@@ -142,12 +152,18 @@ public class Card : MonoBehaviour
         {
             spriteRenderer.material = originalMaterial;
             currentMaterial = originalMaterial;
+
+            // 셰이더 효과도 원래대로 복원
+            if (shaderEffect != null)
+            {
+                shaderEffect.SetEditionByCardValue();
+            }
         }
     }
 
     #endregion
 
-    #region 기존 애니메이션과 함께하는 셰이더 효과 (기존과 동일)
+    #region 기존 이펙트 연출 시퀀스 (그대로 유지)
 
     public void PlayMergeSuccessEffect()
     {
@@ -158,6 +174,12 @@ public class Card : MonoBehaviour
     IEnumerator MergeSuccessSequence()
     {
         isPlayingCardEffect = true;
+
+        // 새로운 비주얼 효과 잠시 비활성화
+        if (visualEffects != null)
+            visualEffects.enabled = false;
+        if (shaderEffect != null)
+            shaderEffect.enabled = false;
 
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null) dragDrop.enabled = false;
@@ -196,6 +218,12 @@ public class Card : MonoBehaviour
     IEnumerator MergeFailureSequence()
     {
         isPlayingCardEffect = true;
+
+        // 새로운 비주얼 효과 잠시 비활성화
+        if (visualEffects != null)
+            visualEffects.enabled = false;
+        if (shaderEffect != null)
+            shaderEffect.enabled = false;
 
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null) dragDrop.enabled = false;
@@ -240,6 +268,12 @@ public class Card : MonoBehaviour
     {
         isPlayingCardEffect = true;
 
+        // 새로운 비주얼 효과 잠시 비활성화
+        if (visualEffects != null)
+            visualEffects.enabled = false;
+        if (shaderEffect != null)
+            shaderEffect.enabled = false;
+
         DragDrop dragDrop = GetComponent<DragDrop>();
         if (dragDrop != null) dragDrop.enabled = false;
 
@@ -269,7 +303,10 @@ public class Card : MonoBehaviour
         isPlayingCardEffect = false;
     }
 
-    // 호버 효과 (새로운 비주얼 효과 추가)
+    #endregion
+
+    #region 새로운 호버/이동 시스템
+
     public void PlayHoverEffect()
     {
         if (isPlayingCardEffect ||
@@ -278,16 +315,19 @@ public class Card : MonoBehaviour
             return;
         }
 
-        ApplyShinyEffect();
-
-        // 새로운 비주얼 효과 추가
+        // 기존 shiny 효과 대신 새로운 비주얼 효과 사용
         if (visualEffects != null)
         {
             visualEffects.PlayHoverEffect();
         }
+
+        // 셰이더 효과로 빛나는 효과 (선택사항)
+        // if (shaderEffect != null)
+        // {
+        //     shaderEffect.SetEdition("POLYCHROME");
+        // }
     }
 
-    // 호버 해제 (새로운 비주얼 효과 추가)
     public void StopHoverEffect()
     {
         if (isPlayingCardEffect)
@@ -295,16 +335,19 @@ public class Card : MonoBehaviour
             return;
         }
 
-        RestoreOriginalMaterial();
-
-        // 새로운 비주얼 효과 추가
+        // 새로운 비주얼 효과 정지
         if (visualEffects != null)
         {
             visualEffects.StopHoverEffect();
         }
+
+        // 원래 셰이더로 복원 (선택사항)
+        // if (shaderEffect != null)
+        // {
+        //     shaderEffect.SetEditionByCardValue();
+        // }
     }
 
-    // 스왑 효과 추가
     public void PlaySwapEffect(float direction = 1f)
     {
         if (visualEffects != null)
@@ -315,7 +358,7 @@ public class Card : MonoBehaviour
 
     #endregion
 
-    #region 마우스 이벤트 (기존과 동일)
+    #region 마우스 이벤트
 
     void OnMouseEnter()
     {

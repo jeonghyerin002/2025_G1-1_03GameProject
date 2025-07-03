@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6919083834178753461}
   - component: {fileID: 6362538753863541440}
   - component: {fileID: -548620440219786600}
+  - component: {fileID: -6806187394361533280}
   m_Layer: 0
   m_Name: Card
   m_TagString: Untagged
@@ -55,7 +56,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: -876546973899608171, guid: 0110ae31753964e0184c6593492227c8, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -170,3 +171,17 @@ MonoBehaviour:
   isDragging: 0
   startPosition: {x: 0, y: 0, z: 0}
   startParent: {fileID: 0}
+--- !u!114 &-6806187394361533280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7716779071114330809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 052a9de7eb9bade448bf09d3f38673bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableShaderEffect: 1
+  rotationSensitivity: 1
