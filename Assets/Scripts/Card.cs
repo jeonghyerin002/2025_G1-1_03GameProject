@@ -13,6 +13,9 @@ public class Card : MonoBehaviour
     public Sprite cardImage;
     public TextMeshPro cardText;
 
+    [Header("카드 등급")]
+    public CardEdition cardEdition = CardEdition.REGULAR;
+
     [Header("Material Effects (이펙트 연출용)")]
     public Material originalMaterial;
     public Material burnMaterial;
@@ -413,5 +416,49 @@ public class Card : MonoBehaviour
     public bool IsPlayingEffect()
     {
         return isPlayingCardEffect;
+    }
+
+    // 등급 정보 가져오기
+    public CardEdition GetCardEdition()
+    {
+        return cardEdition;
+    }
+
+    // 등급 설정 (쉐이더 효과도 함께 적용)
+    public void SetCardEdition(CardEdition edition)
+    {
+        cardEdition = edition;
+
+        // 쉐이더 효과에 등급 적용
+        if (shaderEffect != null)
+        {
+            shaderEffect.SetEdition(edition.ToString());
+        }
+
+        Debug.Log($"카드 등급 설정: {edition}");
+    }
+
+
+    // 등급 업그레이드
+    public void UpgradeEdition()
+    {
+        if (CardRaritySystem.Instance != null)
+        {
+            CardEdition newEdition = CardRaritySystem.Instance.UpgradeEdition(cardEdition);
+            SetCardEdition(newEdition);
+            Debug.Log($"등급 업그레이드: {cardEdition} -> {newEdition}");
+        }
+    }
+
+    // 등급 이름 가져오기
+    public string GetEditionName()
+    {
+        switch (cardEdition)
+        {
+            case CardEdition.REGULAR: return "일반";
+            case CardEdition.POLYCHROME: return "레어";
+            case CardEdition.NEGATIVE: return "전설";
+            default: return "일반";
+        }
     }
 }

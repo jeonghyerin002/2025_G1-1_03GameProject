@@ -13,10 +13,14 @@ public class GameManager : MonoBehaviour
     public CardInfoSO[] cardDatabase;       // 모든 카드 정보
     public MergeRuleSO[] mergeRules;        // 합성 규칙들
     public bool useSOSystem = true;         // SO 시스템 사용 여부
+    public DeckCompositionSO deckComposition; // 덱 구성
 
     [Header("기존 데이터 - 호환용")]
     public GameObject cardPrefab;
     public Sprite[] cardImages;
+
+    [Header("합성 정보 UI")]
+    public MergeInfoUI mergeInfoUI;  
 
     public Transform deckArea;
     public Transform handArea;
@@ -167,30 +171,50 @@ public class GameManager : MonoBehaviour
 
     void InitializeStage()
     {
+        // 기존 스테이지 초기화 유지
         if (StageManager.Instance != null)
         {
             StageDataSO currentStageData = StageManager.Instance.GetCurrentStageData();
 
-            // 덱을 스테이지별로 설정
-            prefedinedDeck = currentStageData.customDeck;
-
-            // UI 업데이트
-            if (stageText != null)
-                stageText.text = "Stage     " + StageManager.Instance.currentStage;
-
-            if (targetScoreText != null)
-                targetScoreText.text = "목표: " + currentStageData.targetScore + "점";
-
-            Debug.Log($"스테이지 {StageManager.Instance.currentStage} 시작!");
+            // SO 덱이 없으면 기존 방식 사용
+            if (useSOSystem && deckComposition != null)
+            {
+                // SO 덱 사용
+                prefedinedDeck = deckComposition.GetDeckAsIntArray();
+                Debug.Log($"SO 덱 사용: {deckComposition.deckName}, 총 {prefedinedDeck.Length}장");
+            }
+            else
+            {
+                // 기존 방식 또는 스테이지 덱 사용
+                prefedinedDeck = currentStageData.customDeck;
+                Debug.Log("기존 덱 방식 사용");
+            }
+        }
+        else
+        {
+            // StageManager 없을 때 SO 덱 체크
+            if (useSOSystem && deckComposition != null)
+            {
+                prefedinedDeck = deckComposition.GetDeckAsIntArray();
+                Debug.Log($"SO 덱 사용 (StageManager 없음): {deckComposition.deckName}");
+            }
         }
 
-        // 배열 초기화
         deckCards = new GameObject[prefedinedDeck.Length];
         handCards = new GameObject[maxHandSize];
         mergeCards = new GameObject[maxMergeSize];
 
         InitializeDeck();
-        ShuffleDeck();
+
+        // SO 덱 설정에 따라 셔플
+        if (useSOSystem && deckComposition != null && deckComposition.shuffleOnStart)
+        {
+            ShuffleDeck();
+        }
+        else if (!useSOSystem)
+        {
+            ShuffleDeck(); // 기존 방식은 항상 셔플
+        }
     }
 
     // 삭제 버튼 클릭 핸들러 부분
@@ -535,6 +559,7 @@ public class GameManager : MonoBehaviour
         {
             // 성공
             score += validRule.scoreReward;
+            SoundManager.Instance.PlayMergeSuccess();
             StartCoroutine(ShowMergeSuccess(validRule.newCardValue, validRule.scoreReward));
 
             // 기존 성공 효과 적용
@@ -544,6 +569,7 @@ public class GameManager : MonoBehaviour
         else
         {
             // 실패
+            SoundManager.Instance.PlayMergeFail();
             ApplyMergeFailureEffects();
             StartCoroutine(ShowMergeFailure());
             StartCoroutine(DelayedDeleteMergeCards());
@@ -618,6 +644,8 @@ public class GameManager : MonoBehaviour
 
     void ProcessMergeOldWay()
     {
+        Debug.Log("기존 합성 로직 시작");
+
         // 기존 합성 로직 유지
         if (mergeCount != 2 && mergeCount != 3 && mergeCount != 4)
         {
@@ -627,10 +655,11 @@ public class GameManager : MonoBehaviour
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
 
-        // 같은 값 체크
+        // 같은 숫자 체크 (등급은 상관없이)
         for (int i = 1; i < mergeCount; i++)
         {
-            if (mergeCards[i].GetComponent<Card>().cardValue != firstCard)
+            int currentCard = mergeCards[i].GetComponent<Card>().cardValue;
+            if (currentCard != firstCard)
             {
                 ShowWarningMessage("같은 숫자의 카드만 합성 가능!", Color.yellow);
                 return;
@@ -646,12 +675,14 @@ public class GameManager : MonoBehaviour
             int newValue = firstCard + 1;
             int scoreToAdd = newValue * 1;
 
+            SoundManager.Instance.PlayMergeSuccess();
             ApplyMergeSuccessEffects();
             StartCoroutine(ShowMergeSuccess(newValue, scoreToAdd));
             StartCoroutine(DelayedMergeCards());
         }
         else
         {
+            SoundManager.Instance.PlayMergeFail();
             ApplyMergeFailureEffects();
             StartCoroutine(ShowMergeFailure());
             StartCoroutine(DelayedDeleteMergeCards());
@@ -808,18 +839,27 @@ public class GameManager : MonoBehaviour
             Card cardComp = newCardObj.GetComponent<Card>();
             if (cardComp != null)
             {
-                if (useSOSystem && cardDatabase != null)
+                if (useSOSystem)
                 {
-                    // SO 시스템 사용
-                    CardInfoSO cardInfo = GetCardInfoByValue(value);
+                    // SO 시스템 사용 - 덱에서 직접 CardInfoSO 가져오기
+                    CardInfoSO cardInfo = GetCardInfoFromDeck(i);
                     if (cardInfo != null)
                     {
                         cardComp.InitCard(cardInfo);
                     }
                     else
                     {
-                        // SO 없으면 기존 방식
-                        InitCardOldWay(cardComp, value);
+                        // SO 없으면 데이터베이스에서 찾기
+                        CardInfoSO dbCardInfo = GetCardInfoByValue(value);
+                        if (dbCardInfo != null)
+                        {
+                            cardComp.InitCard(dbCardInfo);
+                        }
+                        else
+                        {
+                            // 그것도 없으면 기존 방식
+                            InitCardOldWay(cardComp, value);
+                        }
                     }
                 }
                 else
@@ -827,9 +867,28 @@ public class GameManager : MonoBehaviour
                     // 기존 방식
                     InitCardOldWay(cardComp, value);
                 }
+
+                // 덱에 있을 때는 기본 등급으로 설정 (드로우 시 랜덤 등급 적용)
+                cardComp.SetCardEdition(CardEdition.REGULAR);
             }
             deckCards[i] = newCardObj;
         }
+
+        Debug.Log($"덱 초기화 완료: {deckCount}장");
+    }
+
+    // 덱에서 직접 CardInfoSO 가져오기
+    CardInfoSO GetCardInfoFromDeck(int deckIndex)
+    {
+        if (deckComposition == null) return null;
+
+        CardInfoSO[] deckArray = deckComposition.GetDeckAsArray();
+        if (deckIndex >= 0 && deckIndex < deckArray.Length)
+        {
+            return deckArray[deckIndex];
+        }
+
+        return null;
     }
 
     public void ArrangeHand()
@@ -937,6 +996,14 @@ public class GameManager : MonoBehaviour
         deckCount--;
 
         drawnCard.SetActive(true);
+
+        // 드로우할 때 랜덤 등급 설정
+        Card cardComponent = drawnCard.GetComponent<Card>();
+        if (cardComponent != null)
+        {
+            SetRandomCardEdition(cardComponent);
+        }
+
         handCards[handCount] = drawnCard;
         handCount++;
 
@@ -954,6 +1021,27 @@ public class GameManager : MonoBehaviour
 
         ArrangeHand();
     }
+
+    // 랜덤 등급 설정 메서드
+    void SetRandomCardEdition(Card card)
+    {
+        float random = Random.Range(0f, 1f);
+        CardEdition selectedEdition;
+
+        if (random <= 0.05f)        // 5% 확률 - 전설
+            selectedEdition = CardEdition.NEGATIVE;
+        else if (random <= 0.2f)    // 15% 확률 - 에픽  
+            selectedEdition = CardEdition.POLYCHROME;
+        else                        // 80% 확률 - 일반
+            selectedEdition = CardEdition.REGULAR;
+
+        // 카드에 등급 설정
+        card.SetCardEdition(selectedEdition);
+
+        Debug.Log($"드로우한 카드 등급: {selectedEdition}");
+    }
+
+
 
     // 게임 종료 화면을 보여주는 새로운 함수 추가
     IEnumerator ShowGameEndScreen()
@@ -1003,6 +1091,235 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // 머지 영역 변경될 때마다 호출
+    public void UpdateMergeInfo()
+    {
+        if (mergeInfoUI == null) return;
+
+        if (mergeCount < 2)
+        {
+            mergeInfoUI.ShowEmptyState();
+            return;
+        }
+
+        // 합성 가능 여부와 정보 계산
+        string ruleName = "합성 불가";
+        float successRate = 0f;
+        int reward = 0;
+        bool canMerge = false;
+
+        if (useSOSystem && mergeRules != null)
+        {
+            // SO 시스템으로 체크
+            var mergeResult = CheckMergeWithSOInfo();
+            if (mergeResult != null)
+            {
+                canMerge = true;
+                ruleName = mergeResult.ruleName;
+                successRate = mergeResult.successRate;
+                reward = mergeResult.reward;
+            }
+        }
+        else
+        {
+            // 기존 방식으로 체크
+            var oldMergeResult = CheckMergeOldWayInfo();
+            if (oldMergeResult != null)
+            {
+                canMerge = true;
+                ruleName = oldMergeResult.ruleName;
+                successRate = oldMergeResult.successRate;
+                reward = oldMergeResult.reward;
+            }
+        }
+
+        // UI 업데이트
+        mergeInfoUI.UpdateMergeInfo(mergeCount, ruleName, successRate, reward, canMerge);
+    }
+
+    // SO 시스템용 합성 정보 체크
+    MergeInfoResult CheckMergeWithSOInfo()
+    {
+        List<CardInfoSO> selectedCardInfos = new List<CardInfoSO>();
+
+        for (int i = 0; i < mergeCount; i++)
+        {
+            Card card = mergeCards[i].GetComponent<Card>();
+            if (card != null && card.cardInfo != null)
+            {
+                selectedCardInfos.Add(card.cardInfo);
+            }
+        }
+
+        MergeRuleSO validRule = CheckMergeRules(selectedCardInfos);
+        if (validRule != null)
+        {
+            float successRate = GetSuccessRate(validRule, mergeCount);
+            return new MergeInfoResult
+            {
+                ruleName = validRule.ruleName,
+                successRate = successRate,
+                reward = validRule.scoreReward
+            };
+        }
+
+        return null;
+    }
+
+    // 기존 방식용 합성 정보 체크
+    MergeInfoResult CheckMergeOldWayInfo()
+    {
+        Debug.Log("기존 방식으로 합성 정보 체크 시작");
+
+        // 같은 숫자 체크 (등급은 상관없이)
+        int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
+
+        for (int i = 1; i < mergeCount; i++)
+        {
+            int currentCard = mergeCards[i].GetComponent<Card>().cardValue;
+            Debug.Log($"카드 비교: {firstCard} vs {currentCard}");
+
+            if (currentCard != firstCard)
+            {
+                Debug.Log("같은 숫자가 아님 - 합성 불가");
+                return null; // 같은 숫자 아님
+            }
+        }
+
+        // 16번 카드 체크
+        if (firstCard == 16)
+        {
+            Debug.Log("16번 카드는 더 이상 합성 불가");
+            return null; // 더 이상 합성 불가
+        }
+
+        // 확률 계산 (기존 LuckyChance 로직 사용)
+        float chance = CalculateChanceForCard(firstCard, mergeCount);
+
+        Debug.Log($"합성 가능! 카드값: {firstCard}, 개수: {mergeCount}, 확률: {chance * 100}%");
+
+        return new MergeInfoResult
+        {
+            ruleName = "같은 숫자 합성",
+            successRate = chance,
+            reward = (firstCard + 1) * 1
+        };
+    }
+
+    // GameManager.cs의 CalculateChanceForCard 메서드 완성
+    float CalculateChanceForCard(int cardValue, int count)
+    {
+        float chance = 0f;
+
+        switch (cardValue)
+        {
+            case 1: // 클로버 A
+                if (count == 2) chance = 1.0f;
+                else if (count == 3) chance = 0.97f;
+                else if (count == 4) chance = 0.95f;
+                break;
+
+            case 2: // 클로버 J
+                if (count == 2) chance = 0.92f;
+                else if (count == 3) chance = 0.90f;
+                else if (count == 4) chance = 0.90f;
+                break;
+
+            case 3: // 클로버 Q
+                if (count == 2) chance = 0.89f;
+                else if (count == 3) chance = 0.86f;
+                else if (count == 4) chance = 0.85f;
+                break;
+
+            case 4: // 클로버 K
+                if (count == 2) chance = 0.80f;
+                else if (count == 3) chance = 0.78f;
+                else if (count == 4) chance = 0.75f;
+                break;
+
+            case 5: // 다이아 A
+                if (count == 2) chance = 0.73f;
+                else if (count == 3) chance = 0.70f;
+                else if (count == 4) chance = 0.69f;
+                break;
+
+            case 6: // 다이아 J
+                if (count == 2) chance = 0.67f;
+                else if (count == 3) chance = 0.65f;
+                else if (count == 4) chance = 0.62f;
+                break;
+
+            case 7: // 다이아 Q
+                if (count == 2) chance = 0.6f;
+                else if (count == 3) chance = 0.58f;
+                else if (count == 4) chance = 0.56f;
+                break;
+
+            case 8: // 다이아 K
+                if (count == 2) chance = 0.5f;
+                else if (count == 3) chance = 0.48f;
+                else if (count == 4) chance = 0.46f;
+                break;
+
+            case 9: // 하트 A
+                if (count == 2) chance = 1f;
+                else if (count == 3) chance = 0.8f;
+                else if (count == 4) chance = 0.74f;
+                break;
+
+            case 10: // 하트 J
+                if (count == 2) chance = 0.44f;
+                else if (count == 3) chance = 0.42f;
+                else if (count == 4) chance = 0.4f;
+                break;
+
+            case 11: // 하트 Q
+                if (count == 2) chance = 0.38f;
+                else if (count == 3) chance = 0.36f;
+                else if (count == 4) chance = 0.34f;
+                break;
+
+            case 12: // 하트 K
+                if (count == 2) chance = 0.32f;
+                else if (count == 3) chance = 0.3f;
+                else if (count == 4) chance = 0.29f;
+                break;
+
+            case 13: // 스페이드 A
+                if (count == 2) chance = 0.28f;
+                else if (count == 3) chance = 0.26f;
+                else if (count == 4) chance = 0.24f;
+                break;
+
+            case 14: // 스페이드 J
+                if (count == 2) chance = 0.2f;
+                else if (count == 3) chance = 0.15f;
+                else if (count == 4) chance = 0.12f;
+                break;
+
+            case 15: // 스페이드 Q
+                if (count == 2) chance = 0.12f;
+                else if (count == 3) chance = 0.11f;
+                else if (count == 4) chance = 0.10f;
+                break;
+
+            case 16: // 스페이드 K
+                if (count == 2) chance = 0f;
+                else if (count == 3) chance = 0f;
+                else if (count == 4) chance = 0f;
+                break;
+
+            default:
+                Debug.LogWarning($"카드 타입 {cardValue}는 정의되지 않았습니다.");
+                chance = 0f;
+                break;
+        }
+
+        Debug.Log($"카드 {cardValue}, {count}장 합성 확률: {chance * 100}%");
+        return chance;
+    }
+
+
     void DeleteMergeCards()
     {
         Debug.Log($"DeleteMergeCards 호출됨! mergeCount: {mergeCount}");
@@ -1032,31 +1349,51 @@ public class GameManager : MonoBehaviour
         ArrangeMerge();
         
         Debug.Log("Merge 영역의 카드들이 삭제되었습니다.");
+
+        UpdateMergeInfo();
     }
 
     void MergeCards()
     {
         if (mergeCount != 2 && mergeCount != 3 && mergeCount != 4)
         {
-            Debug.Log("머지를 하려면 카드가 2개 또는 3개 혹은 4개 필요합니다.");
+            Debug.Log("합성을 하려면 카드가 2개 또는 3개 혹은 4개 필요합니다.");
             SoundManager.Instance.PlayFullWarning();
             return;
         }
 
         int firstCard = mergeCards[0].GetComponent<Card>().cardValue;
 
-        int newValue = firstCard + 1;
-        int scoreToAdd = newValue * 1;
-        score += scoreToAdd;
-        Debug.Log($"머지 성공! 점수 +{scoreToAdd} (현재 점수: {score})");
+        // 등급 보너스 계산
+        float totalBonus = 1.0f;
+        CardEdition highestEdition = CardEdition.REGULAR;
 
-        if (newValue > cardImages.Length)
+        for (int i = 0; i < mergeCount; i++)
         {
-            Debug.Log("최대 카드 값에 도달 했습니다.");
-            SoundManager.Instance.PlayFullWarning();
-            return;
+            Card card = mergeCards[i].GetComponent<Card>();
+            CardEdition cardEdition = card.GetCardEdition();
+
+            // 보너스 적용
+            if (CardRaritySystem.Instance != null)
+            {
+                totalBonus += CardRaritySystem.Instance.GetBonusMultiplier(cardEdition) - 1.0f;
+            }
+
+            // 가장 높은 등급 찾기
+            if (cardEdition > highestEdition)
+            {
+                highestEdition = cardEdition;
+            }
         }
 
+        int newValue = firstCard + 1;
+        int baseScore = newValue * 1;
+        int finalScore = Mathf.RoundToInt(baseScore * totalBonus);
+
+        score += finalScore;
+        Debug.Log($"합성 성공! 점수 +{finalScore} (기본: {baseScore}, 보너스: {totalBonus:F1}배)");
+
+        // 카드 삭제
         for (int i = 0; i < mergeCount; i++)
         {
             if (mergeCards[i] != null)
@@ -1065,16 +1402,32 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        // 새 카드 생성
         GameObject newCard = Instantiate(cardPrefab, mergeArea.position, Quaternion.identity);
+        Card newCardComponent = newCard.GetComponent<Card>();
 
-        Card newCardTemp = newCard.GetComponent<Card>();
-        if (newCardTemp != null)
+        if (newCardComponent != null)
         {
             int imageIndex = newValue - 1;
-            newCardTemp.InitCard(newValue, cardImages[imageIndex]);
+            newCardComponent.InitCard(newValue, cardImages[imageIndex]);
+
+            // 등급 업그레이드 시도
+            if (CardRaritySystem.Instance != null)
+            {
+                float upgradeChance = CardRaritySystem.Instance.GetUpgradeChance(highestEdition);
+                if (Random.Range(0f, 1f) < upgradeChance)
+                {
+                    CardEdition upgradedEdition = CardRaritySystem.Instance.UpgradeEdition(highestEdition);
+                    newCardComponent.SetCardEdition(upgradedEdition);
+                    Debug.Log($"등급 업그레이드! {upgradedEdition}");
+                }
+                else
+                {
+                    newCardComponent.SetCardEdition(highestEdition);
+                }
+            }
         }
 
-        // 새 카드의 크기를 원본 프리팹과 동일하게 설정
         newCard.transform.localScale = cardPrefab.transform.localScale;
 
         for (int i = 0; i < maxMergeSize; i++)
@@ -1090,7 +1443,6 @@ public class GameManager : MonoBehaviour
         newCard.transform.SetParent(handArea);
 
         UIManager.Instance.ShowScore(score);
-
         ArrangeHand();
         CheckScore();
     }
@@ -1266,6 +1618,7 @@ public class GameManager : MonoBehaviour
         card.transform.SetParent(mergeArea);
         ArrangeMerge();
         UpdateMergeButtonState();
+        UpdateMergeInfo();
     }
 
     public void SetAnyEffectPlaying(bool playing)
@@ -1362,6 +1715,18 @@ public class GameManager : MonoBehaviour
         Debug.Log($"카드 {index1}번과 {index2}번 위치 교체!");
     }
 
+    CardInfoSO GetCardInfoByValue(int value)
+    {
+        if (cardDatabase == null) return null;
+
+        foreach (CardInfoSO card in cardDatabase)
+        {
+            if (card.gameValue == value)
+                return card;
+        }
+        return null;
+    }
+
     void InitCardOldWay(Card cardComp, int value)
     {
         int imageIndex = value - 1;
@@ -1371,16 +1736,14 @@ public class GameManager : MonoBehaviour
         cardComp.InitCard(value, cardImages[imageIndex]);
     }
 
-    CardInfoSO GetCardInfoByValue(int value)
-    {
-        foreach (CardInfoSO card in cardDatabase)
-        {
-            if (card.gameValue == value)
-                return card;
-        }
-        return null;
-    }
 
 
+}
 
+// 결과 데이터 클래스
+public class MergeInfoResult
+{
+    public string ruleName;
+    public float successRate;
+    public int reward;
 }
